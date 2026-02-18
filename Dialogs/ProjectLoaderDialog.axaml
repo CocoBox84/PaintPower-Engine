@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PaintPower.Dialogs.ProjectLoaderDialog"
+        Width="350" Height="200"
+        WindowStartupLocation="CenterScreen"
+        Title="PaintPower Project">
+
+    <StackPanel Margin="20" Spacing="15">
+
+        <TextBlock Text="Welcome to the PaintPower engine!"
+                   FontSize="18"
+                   HorizontalAlignment="Center"/>
+
+        <Button Content="Create New Project"
+                Click="OnNewProject"/>
+
+        <Button Content="Open Existing Project"
+                Click="OnOpenProject"/>
+
+    </StackPanel>
+</Window>
