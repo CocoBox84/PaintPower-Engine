@@ -1,5 +1,6 @@
 ﻿namespace PaintPower.Editors;
 
+using System;
 using System.IO;
 using Avalonia.Controls;
 using PaintPower.ProjectSystem;
@@ -17,18 +18,22 @@ public class Editor
     {
         string relative = Path.GetFileName(path); // later: full relative path
 
-        var ext = Path.GetExtension(path).ToLower();
+        var ext = Path.GetExtension(path);
+        var type = Editors.EditorTypes.FindEditorFromExt(ext.ToLower()); // Get editor type.
 
-        return ext switch
+        return type switch
         {
-            ".png" or ".jpg" or ".jpeg" or ".bmp" or ".gif" or ".webp"
+            "Paint"
                 => new PaintEditor(relative, _workspace),
 
-            ".txt" or ".cs" or ".json" or ".xml" or ".lua" or ".py"
+            "Script"
                 => new ScriptEditor(relative, _workspace),
 
-            ".wxa"
+            "Animation"
                 => new AnimationEditor(relative, _workspace),
+
+            "Video"
+                => new VideoEditor(relative, _workspace),
 
             _ => new TextBlock { Text = $"Unsupported file: {ext}" }
         };

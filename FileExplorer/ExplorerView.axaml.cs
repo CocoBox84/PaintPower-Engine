@@ -5,6 +5,8 @@ using System.IO;
 using PaintPower.ProjectSystem;
 using PaintPower.Dialogs;
 using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace PaintPower.FileExplorer;
 
@@ -99,7 +101,7 @@ public partial class ExplorerView : UserControl
             return;
 
         string path = Path.Combine(_currentDir, name);
-        if (!File.Exists(path))
+        if (!Directory.Exists(path) && !File.Exists(path))
             File.WriteAllText(path, "");
 
         Refresh();
@@ -116,10 +118,25 @@ public partial class ExplorerView : UserControl
 
         string path = Path.Combine(_currentDir, name);
 
-        if (!Directory.Exists(path))
+        if (!Directory.Exists(path) && !File.Exists(path))
+        {
             Directory.CreateDirectory(path);
+        }
+        else {
+            ShowErrorPopup();
+        }
 
-        Refresh();
+            Refresh();
+    }
+
+    private async Task ShowErrorPopup() {
+        var dialog = new PopupWindowDialog("File/Folder Creation Error!", "File or folder already exists in this directory!", "Error");
+        var window = this.VisualRoot as Window;
+        try
+        {
+            await dialog.ShowAsync(window);
+        }
+        catch (Exception ex) { }
     }
 
     // -----------------------------
