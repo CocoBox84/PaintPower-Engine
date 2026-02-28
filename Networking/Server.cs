@@ -8,17 +8,18 @@ using System.Net.Http;
 namespace PaintPower.Networking;
 
 // Networking class for the PaintPower Engine.
-// Mainly to be used for the 'Coco Paint' Project, but it will lie
+// Mainly to be used for the 'Coco xPaint Project', but it will lie
 // here in the engine because it's open source. So anyone can create their own server.
 public class Server
 {
     //*--- Domain security. ---*//
-    private static List<Domain> AllowedDomainsList;
-
-    public void AllowDomain(Domain domain) {  AllowedDomainsList.Add(domain); }
-    public bool isDomainAllowed(Domain domain) { return AllowedDomainsList.Contains(domain); }
+    private static List<Domain> AllowedDomainsList = new List<Domain>();
+    public void AllowDomain(Domain domain) => AllowedDomainsList.Add(domain);
+    public bool IsDomainAllowed(Domain domain) => AllowedDomainsList.Contains(domain);
 
     public void RemoveDomain(Domain domain) { AllowedDomainsList.Remove(domain); }
+
+    public Domain CurrentDomain = new Domain("paint-website.onrender.com");
 
     public void closeAllConnections() {
         AllowedDomainsList.Clear();
@@ -60,6 +61,11 @@ public class Server
         AllowDomain(d16); AllowDomain(d17); AllowDomain(d18); AllowDomain(d19); AllowDomain(d20);
     }
 
+    public void setActiveDomain(Domain domain)
+    {
+        CurrentDomain = domain;
+    }
+
     //*--- Networking ---*//
     public void InitServer()
     {
@@ -69,8 +75,12 @@ public class Server
 
     public bool checkConnection() { return true; }
 
-    public Object GetFromServer(Domain domain) {
-        return Net.PerformGetRequest(URLifyer.URLify(domain));
+    public async Task<string> GetFromServer()
+    {
+        var domain = CurrentDomain;
+        if (domain == null) throw new ArgumentNullException(nameof(domain));
+        if (!IsDomainAllowed(domain)) throw new UnauthorizedAccessException("Domain not allowed");
+        return await Net.PerformGetRequest(URLifyer.URLify(domain));
     }
 
     public Server() {

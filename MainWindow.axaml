@@ -7,19 +7,100 @@
         Width="1280" Height="720"
         Title="PaintPower">
 
-	<Grid ColumnDefinitions="260,*,300">
+	<Grid RowDefinitions="50,*">
 
-		<!-- LEFT: File Explorer -->
-		<explorer:ExplorerView x:Name="Explorer" Grid.Column="0"/>
+		<!-- HEADER -->
+		<Border Grid.Row="0" Background="#e0e0e0">
+			<Grid ColumnDefinitions="200,*,300" VerticalAlignment="Center">
 
-		<!-- CENTER: Editor Host -->
-		<ContentControl x:Name="EditorHost"
-                        Grid.Column="1"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"/>
+				<!-- LEFT: App title -->
+				<TextBlock Text="PaintPower"
+                           VerticalAlignment="Center"
+                           Margin="12,0"
+                           FontSize="20"
+                           Foreground="#333" />
 
-		<!-- RIGHT: VM Panel -->
-		<vm:VmPanel Grid.Column="2"/>
+				<!-- CENTER: Menu buttons -->
+				<StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Spacing="16"
+                            Grid.Column="1"
+                            Margin="12,0">
 
+					<Button Content="File" />
+					<Button Content="Edit" />
+					<Button Content="New" />
+					<Button Content="Save" />
+					<Button Content="Save As" />
+					<Button Content="Make connection" />
+				</StackPanel>
+
+				<!-- RIGHT: Status area -->
+				<StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Spacing="16"
+                            Grid.Column="2"
+                            Margin="0,0,12,0">
+
+					<TextBlock Text="Not connected."
+                               VerticalAlignment="Center"
+                               Foreground="#444" />
+
+					<Button Content="Upload project" />
+
+					<!--It updates only when clicking this. I deleted it, it didn't fix my problem.-->
+					<ComboBox Width="120">
+						<ComboBoxItem Content="[username]" />
+					</ComboBox>
+				</StackPanel>
+
+			</Grid>
+		</Border>
+
+		<!-- MAIN CONTENT -->
+		<Grid Grid.Row="1" ColumnDefinitions="260,5,*,5,340">
+
+			<Grid.Background>
+				<ImageBrush Source="avares://PaintPower/Assets/Background.png"
+							Stretch="None"
+							TileMode="Tile"
+							AlignmentX="Left"
+							AlignmentY="Top"
+							DestinationRect="0,0,10,10" />
+			</Grid.Background>
+
+			<!-- LEFT: File Explorer -->
+			<explorer:ExplorerView x:Name="Explorer" Grid.Column="0"/>
+
+			<!-- LEFT SPLITTER -->
+			<GridSplitter Grid.Column="1"
+						  Width="5"
+						  Background="#505050"
+						  HorizontalAlignment="Stretch"
+						  VerticalAlignment="Stretch"
+						  ResizeDirection="Columns"
+						  ResizeBehavior="PreviousAndNext" />
+
+			<!-- CENTER: Editor Host -->
+			<ContentControl x:Name="EditorHost"
+							Grid.Column="2"
+							HorizontalAlignment="Stretch"
+							VerticalAlignment="Stretch"/>
+
+			<!-- RIGHT SPLITTER -->
+			<GridSplitter Grid.Column="3"
+						  Width="5"
+						  Background="#505050"
+						  HorizontalAlignment="Stretch"
+						  VerticalAlignment="Stretch"
+						  ResizeDirection="Columns"
+						  ResizeBehavior="PreviousAndNext" />
+
+			<!-- RIGHT: VM Panel -->
+			<vm:VmPanel Grid.Column="4"/>
+
+		</Grid>
 	</Grid>
 </Window>

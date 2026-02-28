@@ -13,7 +13,7 @@ public class URLifyer {
             throw new ArgumentNullException();
         }
 
-        var url = $"{domain.Protocol}://${domain.domain}/";
+        var url = $"{domain.Protocol}://{domain.domain}/";
         return url;
     }
 }

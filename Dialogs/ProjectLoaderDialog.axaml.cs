@@ -10,12 +10,7 @@ public partial class ProjectLoaderDialog : Window
 {
     private TaskCompletionSource<ProjectLoaderResult?> _tcs;
 
-    public ProjectLoaderDialog()
-    {
-        AvaloniaXamlLoader.Load(this);
-        _tcs = new TaskCompletionSource<ProjectLoaderResult?>();
-        this.Closed += (_, __) => _tcs.TrySetResult(null); // ensure completion on close
-    }
+    public ProjectLoaderDialog() => AvaloniaXamlLoader.Load(this);
 
     public Task<ProjectLoaderResult?> ShowAsync(Window parent)
     {
@@ -28,17 +23,19 @@ public partial class ProjectLoaderDialog : Window
         var savePicker = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = "Create New Project",
-            DefaultExtension = "paint",
-            SuggestedFileName = "NewProject.paint"
+            DefaultExtension = "xPaint",
+            SuggestedFileName = "NewProject.xPaint"
         });
 
         if (savePicker != null)
         {
-            _tcs.SetResult(new ProjectLoaderResult
+            var r = (new ProjectLoaderResult
             {
                 Mode = ProjectLoaderMode.New,
                 Path = savePicker.Path.LocalPath
             });
+            Close(r);
+        } else {
             Close();
         }
     }
@@ -53,19 +50,15 @@ public partial class ProjectLoaderDialog : Window
             {
                 new FilePickerFileType("PaintPower Project")
                 {
-                    Patterns = new[] { "*.paint" }
+                    Patterns = new[] { "*.xPaint", "*.xpaint", "*.Paint", "*.paint" }
                 }
             }
         });
 
         if (files.Count > 0)
         {
-            _tcs.SetResult(new ProjectLoaderResult
-            {
-                Mode = ProjectLoaderMode.Open,
-                Path = files[0].Path.LocalPath
-            });
-            Close();
+            var r = new ProjectLoaderResult { Mode = ProjectLoaderMode.Open, Path = files[0].Path.LocalPath };
+            Close(r);
         }
     }
 

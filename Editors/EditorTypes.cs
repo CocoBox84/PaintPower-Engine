@@ -10,7 +10,11 @@ namespace PaintPower.Editors;
 public class EditorTypes
 {
     public static string[] Paint = { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp" };
-    public static string[] Script = { ".txt", ".cs", ".json", ".xml", ".lua", ".py", ".coco", ".pss" };
+
+    public static string[] Script = { ".pss", ".c", ".h", ".cpp", ".hpp", ".lua", ".js", ".py",
+        ".json", ".xml", ".yaml", ".yml", ".md", ".txt", ".spk", ".sxml", ".xss", ".xs", 
+        ".Coco", ".coco", ".script", "CocoScript", ".cocoscript", ".jav", ".java" };
+
     public static string[] Animation = { ".wxa" };
     public static string[] Video = { ".mp4", ".mov" };
 

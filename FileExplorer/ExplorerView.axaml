@@ -2,6 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PaintPower.FileExplorer.ExplorerView">
 
+	<Border Background="#99000000">
+
 	<Grid RowDefinitions="Auto,Auto,*" Margin="8">
 
 		<!-- Toolbar -->
@@ -19,9 +21,12 @@
                    Margin="4"/>
 
 		<!-- File List -->
-		<ListBox x:Name="FileList"
-                 Grid.Row="2"
-                 DoubleTapped="OnItemDoubleTapped"
-                 SelectionChanged="OnSelectionChanged"/>
+		<Border Background="#20202020" Grid.Row="2">
+			<ListBox x:Name="FileList"
+					 Grid.Row="2"
+					 DoubleTapped="OnItemDoubleTapped"
+					 SelectionChanged="OnSelectionChanged"/>
+		</Border>
 	</Grid>
+	</Border>
 </UserControl>

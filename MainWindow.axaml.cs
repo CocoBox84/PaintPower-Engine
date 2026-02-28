@@ -6,12 +6,14 @@ using PaintPower.Dialogs;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using PaintPower.Networking;
 namespace PaintPower;
 
 public partial class MainWindow : Window
 {
     private readonly Editor _editorManager;
     private readonly PaintProject _project;
+    public Server server;
 
     public MainWindow()
     {
@@ -19,6 +21,7 @@ public partial class MainWindow : Window
 
         _project = new PaintProject();
         _editorManager = new Editor(_project.Workspace);
+        server = new Server();
     }
 
     protected override async void OnOpened(EventArgs e)
@@ -28,13 +31,9 @@ public partial class MainWindow : Window
         await Task.Yield();
 
         var dialog = new ProjectLoaderDialog();
-        // In MainWindow.OnOpened
-        var result = await dialog.ShowAsync(this); // use ShowAsync, not ShowDialog<T>
-        if (result == null)
-        {
-            Close(); // user cancelled
-            return;
-        }
+        var result = await new ProjectLoaderDialog().ShowDialog<ProjectLoaderResult?>(this);
+        if (result == null) { Close(); return; }
+
         if (result.Mode == ProjectLoaderMode.New)
             _project.CreateNew(result.Path, "New Project");
         else

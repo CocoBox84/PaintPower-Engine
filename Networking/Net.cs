@@ -10,7 +10,7 @@ class Net
     private static readonly HttpClient client = new HttpClient();
 
     // GET request method
-    public static async Task PerformGetRequest(string url)
+    public static async Task<string> PerformGetRequest(string url)
     {
         try
         {
@@ -20,10 +20,12 @@ class Net
             string responseBody = await response.Content.ReadAsStringAsync();
             Console.WriteLine("GET Response:");
             Console.WriteLine(responseBody);
+            return responseBody;
         }
         catch (HttpRequestException e)
         {
             Console.WriteLine($"GET request error: {e.Message}");
+            return null;
         }
     }
 

@@ -19,6 +19,7 @@ public partial class PopupWindowDialog : Window
         Title = title;
         PromptText.Text = prompt;
         _tcs = new TaskCompletionSource<string?>();
+        this.Closed += (_, __) => _tcs.TrySetResult(null);
     }
 
     public Task<string?> ShowAsync(Window parent)
@@ -31,4 +32,6 @@ public partial class PopupWindowDialog : Window
     {
         Close();
     }
+
+    private void OnCancel(object? sender, RoutedEventArgs e) { Close(); }
 }

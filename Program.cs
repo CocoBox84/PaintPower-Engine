@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using System;
+using System.Runtime.InteropServices;
 
 namespace PaintPower;
 
@@ -18,4 +19,8 @@ class Program
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace();
+
+    [DllImport("kernel32.dll")]
+    private static extern bool AllocConsole();
+
 }

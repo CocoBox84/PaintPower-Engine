@@ -36,6 +36,13 @@ public partial class ExplorerView : UserControl
     {
         Items.Clear();
 
+        Items.Clear();
+        if (_workspace == null || !Directory.Exists(_currentDir))
+        {
+            PathLabel.Text = "(no project)";
+            return;
+        }
+
         PathLabel.Text = _currentDir.Replace("\\", "/");
 
         // Folders first

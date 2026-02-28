@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="Dialogs\PopupDialog.axaml" />
@@ -21,6 +22,17 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="AvaloniaEdit">
+			<HintPath>..\AvaloniaEdit\net6.0\AvaloniaEdit.dll</HintPath>
+			
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\**" />
+	</ItemGroup>
 
   <ItemGroup>
     <Folder Include="FileExplorer\" />

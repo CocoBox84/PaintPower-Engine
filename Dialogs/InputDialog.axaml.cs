@@ -14,6 +14,7 @@ public partial class InputDialog : Window
         Title = title;
         PromptText.Text = prompt;
         _tcs = new TaskCompletionSource<string?>();
+        this.Closed += (_, __) => _tcs.TrySetResult(null);
     }
 
     public Task<string?> ShowAsync(Window parent)
