@@ -1,134 +1,5 @@
 Severity	Code	Description	Project	File	Line	Suppression State	Details
-Error (active)	AVLN2000	Unable to resolve suitable regular or attached property Padding on type Avalonia.Controls:Avalonia.Controls.StackPanel Line 58, position 7.	PaintPower	C:\Users\ninoe\Documents\PaintPower\PaintPower\Editors\PaintEditor.axaml	58		
-Severity	Code	Description	Project	File	Line	Suppression State	Details
-Error (active)	AVLN2000	Unable to resolve suitable regular or attached property CornerRadius on type Avalonia.Controls:Avalonia.Controls.StackPanel Line 58, position 7.	PaintPower	C:\Users\ninoe\Documents\PaintPower\PaintPower\Editors\PaintEditor.axaml	58		
-<UserControl xmlns="https://github.com/avaloniaui"
-xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-x:Class="PaintPower.Editors.PaintEditor">
-
-<Grid RowDefinitions="60,*">
-
-<Rectangle Fill="#80000000"
-Grid.RowSpan="2"
-IsHitTestVisible="False"/>
-
-<!-- TOP TOOLBAR -->
-<StackPanel Grid.Row="0"
-Orientation="Horizontal"
-Background="#e0e0e0"
-VerticalAlignment="Center"
-HorizontalAlignment="Left"
-Spacing="16"
-Margin="12">
-<Button x:Name="UndoButton" Content="Undo" Width="80"/>
-<Button x:Name="SaveButton" Content="Save" Width="80"/>
-<Button x:Name="ClearButton" Content="Clear" Width="80"/>
-<Button x:Name="RedoButton" Content="Redo" Width="80"/>
-</StackPanel>
-
-<!-- 3-COLUMN AREA -->
-<Grid Grid.Row="1" ColumnDefinitions="80,*,220">
-
-<!-- LEFT COLUMN -->
-<Border Grid.Column="0"
-Background="#303030"
-Padding="8">
-<StackPanel Spacing="12"
-VerticalAlignment="Top">
-<!-- future tools -->
-</StackPanel>
-</Border>
-
-<!-- CENTER COLUMN: CANVAS WITH VIEWPORT -->
-<Border Grid.Column="1"
-Margin="8"
-Background="Cyan">
-
-<!-- Grid allows multiple children -->
-<Grid>
-
-<!-- Scrollable zoomable canvas -->
-<ScrollViewer HorizontalScrollBarVisibility="Auto"
-		VerticalScrollBarVisibility="Auto">
-<LayoutTransformControl x:Name="ZoomContainer">
-<Image x:Name="CanvasImage"
-		Stretch="None"
-		HorizontalAlignment="Left"
-		VerticalAlignment="Top"/>
-</LayoutTransformControl>
-</ScrollViewer>
-
-<!-- Floating zoom controls -->
-<StackPanel Orientation="Horizontal"
-	Background="#80000000"
-	Padding="6"
-	CornerRadius="4"
-	HorizontalAlignment="Left"
-	VerticalAlignment="Bottom"
-	Margin="10">
-
-<TextBlock Text="Zoom"
-		Foreground="White"
-		VerticalAlignment="Center"
-		Margin="0,0,8,0"/>
-
-<Slider x:Name="ZoomSlider"
-	Minimum="0.1"
-	Maximum="8"
-	Value="1"
-	Width="150"/>
-</StackPanel>
-
-</Grid>
-</Border>
-
-<!-- RIGHT COLUMN -->
-<Border Grid.Column="2"
-Background="#e0e0e0"
-Padding="12">
-<StackPanel Spacing="12"
-VerticalAlignment="Top">
-
-<TextBlock Text="Brush Size" />
-<Slider x:Name="BrushSizeSlider"
-Minimum="1" Maximum="50"
-Width="150"
-Value="8"/>
-
-<TextBlock Text="Color" />
-
-<Border Background="White"
-CornerRadius="4"
-Padding="4">
-<ItemsControl x:Name="ColorSwatches">
-<ItemsControl.ItemsPanel>
-	<ItemsPanelTemplate>
-		<WrapPanel Orientation="Horizontal"/>
-	</ItemsPanelTemplate>
-</ItemsControl.ItemsPanel>
-
-<ItemsControl.ItemTemplate>
-	<DataTemplate>
-		<Border Width="24" Height="24"
-				Background="{Binding}"
-				CornerRadius="4"
-				Margin="2"
-				BorderBrush="Black"
-				BorderThickness="1"
-				PointerPressed="OnSwatchClicked"/>
-	</DataTemplate>
-</ItemsControl.ItemTemplate>
-</ItemsControl>
-</Border>
-
-<Button x:Name="EraserButton" Content="Eraser" Width="150"/>
-
-</StackPanel>
-</Border>
-
-</Grid>
-</Grid>
-</UserControl>
+Error (active)	CS0103	The name 'pixelGrid' does not exist in the current context	PaintPower	C:\Users\ninoe\Documents\PaintPower\PaintPower\Editors\PaintEditor.axaml.cs	76		
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -151,6 +22,10 @@ private WriteableBitmap _bitmap;
 private bool _isDrawing;
 private Avalonia.Point _lastPoint;
 private Avalonia.Media.Color _currentColor = Colors.Black;
+
+private bool _isPanning;
+private Avalonia.Point _panStart;
+private Vector _scrollStart;
 
 // Undo/Redo setup
 private readonly Stack<WriteableBitmap> _undoStack = new();
@@ -199,8 +74,24 @@ if (e.Property == Slider.ValueProperty)
 {
 double scale = ZoomSlider.Value;
 ZoomContainer.LayoutTransform = new ScaleTransform(scale, scale);
+
+pixelGrid.Zoom = scale;
+pixelGrid.InvalidateVisual();
 }
 };
+
+ScrollViewer scroll = this.FindControl<ScrollViewer>("CanvasScroll");
+scroll.PointerWheelChanged += OnPointerWheelChanged;
+
+HandToolButton.Click += (_, __) =>
+{
+_isPanning = !_isPanning;
+HandToolButton.Content = _isPanning ? "Hand Tool (On)" : "Hand Tool";
+};
+
+scroll.PointerPressed += OnScrollPointerPressed;
+scroll.PointerReleased += OnScrollPointerReleased;
+scroll.PointerMoved += OnScrollPointerMoved;
 }
 
 private void OnSwatchClicked(object? sender, PointerPressedEventArgs e)
@@ -253,26 +144,36 @@ AlphaFormat.Premul
 );
 }
 
+pixelGrid.PixelWidth = _bitmap.PixelSize.Width;
+pixelGrid.PixelHeight = _bitmap.PixelSize.Height;
+
 CanvasImage.Source = _bitmap;
 }
 
 private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
 {
+if (_isPanning)
+return;
+
 _isDrawing = true;
-_lastPoint = ToBitmapSpace(e.GetPosition(CanvasImage));
+_lastPoint = ToBitmapSpace(e);
 DrawPoint(_lastPoint);
 }
 
 private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
 {
+if (_isPanning)
+return;
+
 _isDrawing = false;
 }
 
 private void OnPointerMoved(object? sender, PointerEventArgs e)
 {
-if (!_isDrawing) return;
+if (_isPanning || !_isDrawing)
+return;
 
-var point = ToBitmapSpace(e.GetPosition(CanvasImage));
+var point = ToBitmapSpace(e);
 DrawLine(_lastPoint, point);
 _lastPoint = point;
 }
@@ -329,10 +230,19 @@ using var fs = File.Open(fullPath, FileMode.Create);
 _bitmap.Save(fs);
 }
 
-private Avalonia.Point ToBitmapSpace(Avalonia.Point p)
+private Avalonia.Point ToBitmapSpace(PointerEventArgs e)
 {
+// 1. Pointer position relative to ScrollViewer
+var scroll = this.FindControl<ScrollViewer>("CanvasScroll");
+var pos = e.GetPosition(scroll);
+
+// 2. Transform ScrollViewer ? ZoomContainer
+var transform = scroll.TransformToVisual(ZoomContainer);
+var zoomSpace = transform?.Transform(pos) ?? pos;
+
+// 3. Divide by zoom scale to get bitmap pixel coordinates
 double scale = ZoomSlider.Value;
-return new Avalonia.Point(p.X / scale, p.Y / scale);
+return new Avalonia.Point(zoomSpace.X / scale, zoomSpace.Y / scale);
 }
 
 private WriteableBitmap CloneBitmap(WriteableBitmap source)
@@ -400,4 +310,194 @@ fb.RowBytes * fb.Size.Height);
 CanvasImage.InvalidateVisual();
 }
 
+private void OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+{
+if (!e.KeyModifiers.HasFlag(KeyModifiers.Control))
+return;
+
+var scroll = (ScrollViewer)sender;
+var pos = e.GetPosition(scroll);
+
+double oldZoom = ZoomSlider.Value;
+double delta = e.Delta.Y > 0 ? 1.1 : 0.9;
+double newZoom = Math.Clamp(oldZoom * delta, ZoomSlider.Minimum, ZoomSlider.Maximum);
+
+ZoomSlider.Value = newZoom;
+
+double factor = newZoom / oldZoom;
+
+scroll.Offset = new Vector(
+(scroll.Offset.X + pos.X) * factor - pos.X,
+(scroll.Offset.Y + pos.Y) * factor - pos.Y
+);
+
+e.Handled = true;
 }
+
+private void OnScrollPointerPressed(object? sender, PointerPressedEventArgs e)
+{
+var scroll = (ScrollViewer)sender;
+
+// Middle mouse OR Hand Tool mode
+if (e.GetCurrentPoint(scroll).Properties.IsMiddleButtonPressed || _isPanning)
+{
+_panStart = e.GetPosition(scroll);
+_scrollStart = scroll.Offset;
+scroll.Cursor = new Cursor(StandardCursorType.Hand);
+e.Pointer.Capture(scroll);
+}
+}
+
+private void OnScrollPointerReleased(object? sender, PointerReleasedEventArgs e)
+{
+var scroll = (ScrollViewer)sender;
+scroll.Cursor = Cursor.Default;
+e.Pointer.Capture(null);
+}
+
+private void OnScrollPointerMoved(object? sender, PointerEventArgs e)
+{
+var scroll = (ScrollViewer)sender;
+
+if (e.Pointer.Captured == scroll)
+{
+var pos = e.GetPosition(scroll);
+var delta = pos - _panStart;
+
+scroll.Offset = new Vector(
+_scrollStart.X - delta.X,
+_scrollStart.Y - delta.Y
+);
+}
+}
+}
+
+<UserControl xmlns="https://github.com/avaloniaui"
+xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+x:Class="PaintPower.Editors.PaintEditor"
+xmlns:local="clr-namespace:PaintPower.EditorTools">
+
+<Grid RowDefinitions="60,*">
+
+<Rectangle Fill="#80000000"
+Grid.RowSpan="2"
+IsHitTestVisible="False"/>
+
+<!-- TOP TOOLBAR -->
+<StackPanel Grid.Row="0"
+Orientation="Horizontal"
+Background="#e0e0e0"
+VerticalAlignment="Center"
+HorizontalAlignment="Left"
+Spacing="16"
+Margin="12">
+<Button x:Name="UndoButton" Content="Undo" Width="80"/>
+<Button x:Name="SaveButton" Content="Save" Width="80"/>
+<Button x:Name="ClearButton" Content="Clear" Width="80"/>
+<Button x:Name="RedoButton" Content="Redo" Width="80"/>
+</StackPanel>
+
+<!-- 3-COLUMN AREA -->
+<Grid Grid.Row="1" ColumnDefinitions="80,*,220">
+
+<!-- LEFT COLUMN -->
+<Border Grid.Column="0"
+Background="#303030"
+Padding="8">
+<StackPanel Spacing="12"
+VerticalAlignment="Top">
+<!-- future tools -->
+</StackPanel>
+</Border>
+
+<!-- CENTER COLUMN: CANVAS WITH VIEWPORT -->
+<Border Grid.Column="1"
+Margin="8"
+Background="Cyan">
+
+<Grid>
+
+<!-- Scrollable zoomable canvas -->
+<ScrollViewer x:Name="CanvasScroll"
+HorizontalScrollBarVisibility="Auto"
+VerticalScrollBarVisibility="Auto">
+<LayoutTransformControl x:Name="ZoomContainer">
+<Image x:Name="CanvasImage"
+Stretch="None"
+HorizontalAlignment="Left"
+VerticalAlignment="Top"/>
+</LayoutTransformControl>
+</ScrollViewer>
+
+<local:PixelGrid x:Name="pixelGrid"
+IsHitTestVisible="False"
+HorizontalAlignment="Left"
+VerticalAlignment="Top"/>
+
+<!-- Floating zoom controls -->
+<Border Background="#80000000"
+Padding="6"
+CornerRadius="4"
+HorizontalAlignment="Left"
+VerticalAlignment="Bottom"
+Margin="10">
+<StackPanel Orientation="Horizontal"
+Spacing="8">
+
+<TextBlock Text="Zoom"
+Foreground="White"
+VerticalAlignment="Center"/>
+
+<Slider x:Name="ZoomSlider"
+Minimum="0.1"
+Maximum="8"
+Value="1"
+Width="150"/>
+
+</StackPanel>
+</Border>
+
+</Grid>
+</Border>
+
+<!-- RIGHT COLUMN -->
+<Border Grid.Column="2"
+Background="#e0e0e0"
+Padding="12">
+<StackPanel Spacing="12"
+VerticalAlignment="Top">
+<TextBlock Text="Brush Size" />
+<Slider x:Name="BrushSizeSlider"
+Minimum="1" Maximum="50"
+Width="150"
+Value="8"/>
+<TextBlock Text="Color" />
+<Border Background="White"
+CornerRadius="4"
+Padding="4">
+<ItemsControl x:Name="ColorSwatches">
+<ItemsControl.ItemsPanel>
+<ItemsPanelTemplate>
+<WrapPanel Orientation="Horizontal"/>
+</ItemsPanelTemplate>
+</ItemsControl.ItemsPanel>
+<ItemsControl.ItemTemplate>
+<DataTemplate>
+<Border Width="24" Height="24"
+Background="{Binding}"
+CornerRadius="4"
+Margin="2"
+BorderBrush="Black"
+BorderThickness="1"
+PointerPressed="OnSwatchClicked"/>
+</DataTemplate>
+</ItemsControl.ItemTemplate>
+</ItemsControl>
+</Border>
+<Button x:Name="EraserButton" Content="Eraser" Width="150"/>
+<Button x:Name="HandToolButton" Content="Hand Tool" Width="150"/>
+</StackPanel>
+</Border>
+</Grid>
+</Grid>
+</UserControl>

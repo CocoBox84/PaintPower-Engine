@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="PaintPower.Editors.PaintEditor">
+             x:Class="PaintPower.Editors.PaintEditor"
+			 xmlns:local="clr-namespace:PaintPower.Editors">
 
 	<Grid RowDefinitions="60,*">
 
@@ -53,6 +54,11 @@
 								   VerticalAlignment="Top"/>
 						</LayoutTransformControl>
 					</ScrollViewer>
+
+					<local:PixelGrid x:Name="pixelGrid"
+                 IsHitTestVisible="False"
+                 HorizontalAlignment="Left"
+                 VerticalAlignment="Top"/>
 
 					<!-- Floating zoom controls -->
 					<Border Background="#80000000"
@@ -120,6 +126,7 @@
 					</Border>
 
 					<Button x:Name="EraserButton" Content="Eraser" Width="150"/>
+					<Button x:Name="HandToolButton" Content="Hand Tool" Width="150"/>
 
 				</StackPanel>
 			</Border>

@@ -21,6 +21,10 @@ public partial class PaintEditor : UserControl
     private Avalonia.Point _lastPoint;
     private Avalonia.Media.Color _currentColor = Colors.Black;
 
+    private bool _isPanning;
+    private Avalonia.Point _panStart;
+    private Vector _scrollStart;
+
     // Undo/Redo setup
     private readonly Stack<WriteableBitmap> _undoStack = new();
     private readonly Stack<WriteableBitmap> _redoStack = new();
@@ -68,11 +72,24 @@ public partial class PaintEditor : UserControl
             {
                 double scale = ZoomSlider.Value;
                 ZoomContainer.LayoutTransform = new ScaleTransform(scale, scale);
+
+                pixelGrid.Zoom = scale;
+                pixelGrid.InvalidateVisual();
             }
         };
 
         ScrollViewer scroll = this.FindControl<ScrollViewer>("CanvasScroll");
         scroll.PointerWheelChanged += OnPointerWheelChanged;
+
+        HandToolButton.Click += (_, __) =>
+        {
+            _isPanning = !_isPanning;
+            HandToolButton.Content = _isPanning ? "Hand Tool (On)" : "Hand Tool";
+        };
+
+        scroll.PointerPressed += OnScrollPointerPressed;
+        scroll.PointerReleased += OnScrollPointerReleased;
+        scroll.PointerMoved += OnScrollPointerMoved;
     }
 
     private void OnSwatchClicked(object? sender, PointerPressedEventArgs e)
@@ -125,26 +142,36 @@ public partial class PaintEditor : UserControl
             );
         }
 
+        pixelGrid.PixelWidth = _bitmap.PixelSize.Width;
+        pixelGrid.PixelHeight = _bitmap.PixelSize.Height;
+
         CanvasImage.Source = _bitmap;
     }
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (_isPanning)
+            return;
+
         _isDrawing = true;
-        _lastPoint = ToBitmapSpace(e.GetPosition(CanvasImage));
+        _lastPoint = ToBitmapSpace(e);
         DrawPoint(_lastPoint);
     }
 
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (_isPanning)
+            return;
+
         _isDrawing = false;
     }
 
     private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (!_isDrawing) return;
+        if (_isPanning || !_isDrawing)
+            return;
 
-        var point = ToBitmapSpace(e.GetPosition(CanvasImage));
+        var point = ToBitmapSpace(e);
         DrawLine(_lastPoint, point);
         _lastPoint = point;
     }
@@ -201,10 +228,19 @@ public partial class PaintEditor : UserControl
         _bitmap.Save(fs);
     }
 
-    private Avalonia.Point ToBitmapSpace(Avalonia.Point p)
+    private Avalonia.Point ToBitmapSpace(PointerEventArgs e)
     {
+        // 1. Pointer position relative to ScrollViewer
+        var scroll = this.FindControl<ScrollViewer>("CanvasScroll");
+        var pos = e.GetPosition(scroll);
+
+        // 2. Transform ScrollViewer → ZoomContainer
+        var transform = scroll.TransformToVisual(ZoomContainer);
+        var zoomSpace = transform?.Transform(pos) ?? pos;
+
+        // 3. Divide by zoom scale to get bitmap pixel coordinates
         double scale = ZoomSlider.Value;
-        return new Avalonia.Point(p.X / scale, p.Y / scale);
+        return new Avalonia.Point(zoomSpace.X / scale, zoomSpace.Y / scale);
     }
 
     private WriteableBitmap CloneBitmap(WriteableBitmap source)
@@ -274,18 +310,62 @@ public partial class PaintEditor : UserControl
 
     private void OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
-        // Only zoom when Ctrl is held
         if (!e.KeyModifiers.HasFlag(KeyModifiers.Control))
             return;
 
-        double delta = e.Delta.Y > 0 ? 1.1 : 0.9; // zoom in/out
-        double newZoom = ZoomSlider.Value * delta;
+        var scroll = (ScrollViewer)sender;
+        var pos = e.GetPosition(scroll);
 
-        // Clamp zoom
-        newZoom = Math.Clamp(newZoom, ZoomSlider.Minimum, ZoomSlider.Maximum);
+        double oldZoom = ZoomSlider.Value;
+        double delta = e.Delta.Y > 0 ? 1.1 : 0.9;
+        double newZoom = Math.Clamp(oldZoom * delta, ZoomSlider.Minimum, ZoomSlider.Maximum);
 
         ZoomSlider.Value = newZoom;
 
+        double factor = newZoom / oldZoom;
+
+        scroll.Offset = new Vector(
+            (scroll.Offset.X + pos.X) * factor - pos.X,
+            (scroll.Offset.Y + pos.Y) * factor - pos.Y
+        );
+
         e.Handled = true;
+    }
+
+    private void OnScrollPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        var scroll = (ScrollViewer)sender;
+
+        // Middle mouse OR Hand Tool mode
+        if (e.GetCurrentPoint(scroll).Properties.IsMiddleButtonPressed || _isPanning)
+        {
+            _panStart = e.GetPosition(scroll);
+            _scrollStart = scroll.Offset;
+            scroll.Cursor = new Cursor(StandardCursorType.Hand);
+            e.Pointer.Capture(scroll);
+        }
+    }
+
+    private void OnScrollPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        var scroll = (ScrollViewer)sender;
+        scroll.Cursor = Cursor.Default;
+        e.Pointer.Capture(null);
+    }
+
+    private void OnScrollPointerMoved(object? sender, PointerEventArgs e)
+    {
+        var scroll = (ScrollViewer)sender;
+
+        if (e.Pointer.Captured == scroll)
+        {
+            var pos = e.GetPosition(scroll);
+            var delta = pos - _panStart;
+
+            scroll.Offset = new Vector(
+                _scrollStart.X - delta.X,
+                _scrollStart.Y - delta.Y
+            );
+        }
     }
 }
