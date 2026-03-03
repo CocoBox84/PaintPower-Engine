@@ -35,16 +35,34 @@ public class PixelGrid : Control
 
     public override void Render(DrawingContext context)
     {
-        if (Zoom < 4) return; // Only show grid when zoomed in enough
+        if (Zoom < 5)
+            return; // Only show grid when zoomed in enough
 
-        var pen = new Pen(Brushes.Gray, 1);
+        double step = Zoom; // 1 pixel = Zoom units
 
-        double step = Zoom; // Each pixel becomes Zoom units wide
+        var minorPen = new Pen(Brushes.Gray, 1);
+        var majorPen = new Pen(Brushes.White, 1.5); // thicker, brighter
 
-        for (double x = 0; x <= PixelWidth * Zoom; x += step)
-            context.DrawLine(pen, new Point(x, 0), new Point(x, PixelHeight * Zoom));
+        // Vertical lines
+        for (int x = 0; x <= PixelWidth; x++)
+        {
+            double px = x * step;
 
-        for (double y = 0; y <= PixelHeight * Zoom; y += step)
-            context.DrawLine(pen, new Point(0, y), new Point(PixelWidth * Zoom, y));
+            if (x % 16 == 0)
+                context.DrawLine(majorPen, new Point(px, 0), new Point(px, PixelHeight * step));
+            else
+                context.DrawLine(minorPen, new Point(px, 0), new Point(px, PixelHeight * step));
+        }
+
+        // Horizontal lines
+        for (int y = 0; y <= PixelHeight; y++)
+        {
+            double py = y * step;
+
+            if (y % 16 == 0)
+                context.DrawLine(majorPen, new Point(0, py), new Point(PixelWidth * step, py));
+            else
+                context.DrawLine(minorPen, new Point(0, py), new Point(PixelWidth * step, py));
+        }
     }
 }

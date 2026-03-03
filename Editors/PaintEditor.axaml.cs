@@ -28,6 +28,8 @@ public partial class PaintEditor : UserControl
     // Undo/Redo setup
     private readonly Stack<WriteableBitmap> _undoStack = new();
     private readonly Stack<WriteableBitmap> _redoStack = new();
+    private enum ToolMode { Brush, Eraser, Bucket, Hand }
+    private ToolMode _tool = ToolMode.Brush;
 
     public PaintEditor(string relativePath, TempWorkspace workspace)
     {
@@ -60,7 +62,6 @@ public partial class PaintEditor : UserControl
         CanvasImage.PointerMoved += OnPointerMoved;
 
         SaveButton.Click += (_, __) => Save();
-        EraserButton.Click += (_, __) => _currentColor = Colors.White;
 
         UndoButton.Click += (_, __) => Undo();
         RedoButton.Click += (_, __) => Redo();
@@ -81,15 +82,13 @@ public partial class PaintEditor : UserControl
         ScrollViewer scroll = this.FindControl<ScrollViewer>("CanvasScroll");
         scroll.PointerWheelChanged += OnPointerWheelChanged;
 
-        HandToolButton.Click += (_, __) =>
-        {
-            _isPanning = !_isPanning;
-            HandToolButton.Content = _isPanning ? "Hand Tool (On)" : "Hand Tool";
-        };
-
         scroll.PointerPressed += OnScrollPointerPressed;
         scroll.PointerReleased += OnScrollPointerReleased;
         scroll.PointerMoved += OnScrollPointerMoved;
+
+        EraserButton.Click += (_, __) => { _tool = ToolMode.Eraser; _currentColor = Colors.White; };
+        HandToolButton.Click += (_, __) => { _tool = ToolMode.Hand; _isPanning = true; };
+        BucketButton.Click += (_, __) => { _tool = ToolMode.Bucket; _isPanning = false; };
     }
 
     private void OnSwatchClicked(object? sender, PointerPressedEventArgs e)
@@ -150,11 +149,22 @@ public partial class PaintEditor : UserControl
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (_isPanning)
+        if (_tool == ToolMode.Hand)
             return;
 
+        _undoStack.Push(CloneBitmap(_bitmap));
+
+        var point = ToBitmapSpace(e);
+
+        if (_tool == ToolMode.Bucket)
+        {
+            FloodFill((int)point.X, (int)point.Y, _currentColor);
+            CanvasImage.InvalidateVisual();
+            return;
+        }
+
         _isDrawing = true;
-        _lastPoint = ToBitmapSpace(e);
+        _lastPoint = point;
         DrawPoint(_lastPoint);
     }
 
@@ -366,6 +376,56 @@ public partial class PaintEditor : UserControl
                 _scrollStart.X - delta.X,
                 _scrollStart.Y - delta.Y
             );
+        }
+    }
+
+    private unsafe void FloodFill(int x, int y, Color newColor)
+    {
+        using var fb = _bitmap.Lock();
+
+        int width = _bitmap.PixelSize.Width;
+        int height = _bitmap.PixelSize.Height;
+
+        uint* ptr = (uint*)fb.Address;
+        int index = y * width + x;
+
+        uint targetColor = ptr[index];
+        uint replacementColor = newColor.ToUInt32();
+
+        if (targetColor == replacementColor)
+            return;
+
+        Stack<(int X, int Y)> stack = new();
+        stack.Push((x, y));
+
+        while (stack.Count > 0)
+        {
+            var (px, py) = stack.Pop();
+
+            int left = px;
+            int right = px;
+
+            // Move left
+            while (left >= 0 && ptr[py * width + left] == targetColor)
+                left--;
+
+            // Move right
+            while (right < width && ptr[py * width + right] == targetColor)
+                right++;
+
+            // Fill the scanline
+            for (int i = left + 1; i < right; i++)
+            {
+                ptr[py * width + i] = replacementColor;
+
+                // Check above
+                if (py > 0 && ptr[(py - 1) * width + i] == targetColor)
+                    stack.Push((i, py - 1));
+
+                // Check below
+                if (py < height - 1 && ptr[(py + 1) * width + i] == targetColor)
+                    stack.Push((i, py + 1));
+            }
         }
     }
 }

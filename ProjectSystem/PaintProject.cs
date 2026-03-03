@@ -11,6 +11,8 @@ public class PaintProject
     public TempWorkspace Workspace { get; }
     public ProjectMetadata Metadata { get; private set; }
 
+    public string ProjectName { get; private set; }
+
     public PaintProject()
     {
         Workspace = new TempWorkspace();
@@ -20,12 +22,12 @@ public class PaintProject
     // -------------------------
     // CREATE NEW PROJECT
     // -------------------------
-    public void CreateNew(string projectPath, string name)
+    public void CreateNew(string projectPath, string Name)
     {
         ProjectPath = projectPath;
         Metadata = new ProjectMetadata
         {
-            Name = name,
+            name = Name,
             OpenFile = null
         };
 
@@ -86,6 +88,6 @@ public class PaintProject
 // -------------------------
 public class ProjectMetadata
 {
-    public string Name { get; set; } = "Untitled Project";
+    public string name { get; set; } = "Untitled Project";
     public string? OpenFile { get; set; }
 }

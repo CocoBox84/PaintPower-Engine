@@ -43,7 +43,9 @@ public partial class ExplorerView : UserControl
             return;
         }
 
-        PathLabel.Text = _currentDir.Replace("\\", "/");
+        string relativePath = (_currentDir.Replace(_workspace.ItemsDir, "").Replace("\\", "/")) + "/";
+
+        PathLabel.Text = relativePath;
 
         // Folders first
         foreach (var dir in Directory.GetDirectories(_currentDir))

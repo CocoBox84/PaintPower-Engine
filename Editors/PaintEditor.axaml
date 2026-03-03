@@ -127,6 +127,7 @@
 
 					<Button x:Name="EraserButton" Content="Eraser" Width="150"/>
 					<Button x:Name="HandToolButton" Content="Hand Tool" Width="150"/>
+					<Button x:Name="BucketButton" Content="Bucket" Width="150"/>
 
 				</StackPanel>
 			</Border>

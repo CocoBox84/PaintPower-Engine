@@ -32,6 +32,4 @@ public partial class PopupWindowDialog : Window
     {
         Close();
     }
-
-    private void OnCancel(object? sender, RoutedEventArgs e) { Close(); }
 }

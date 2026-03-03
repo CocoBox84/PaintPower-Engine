@@ -13,6 +13,7 @@ public partial class MainWindow : Window
 {
     private readonly Editor _editorManager;
     private readonly PaintProject _project;
+    private Control _editor;
     public Server server;
 
     public MainWindow()
@@ -39,7 +40,7 @@ public partial class MainWindow : Window
         else
             _project.Load(result.Path);
 
-        Title = $"PaintPower - {_project.Metadata.Name}";
+        Title = $"PaintPower - {_project.Metadata.name}";
 
         Explorer.Initialize(_project.Workspace);
 
@@ -53,6 +54,7 @@ public partial class MainWindow : Window
 
     public void OpenEditor(Control editor)
     {
+        _editor = editor;
         EditorHost.Content = editor;
     }
 
@@ -65,5 +67,9 @@ public partial class MainWindow : Window
     public void CloseEditor()
     {
         EditorHost.Content = null;
+        _editor = null;
     }
+
+    public void save() {
     }
+}
