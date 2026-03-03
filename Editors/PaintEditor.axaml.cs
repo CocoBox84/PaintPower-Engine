@@ -16,18 +16,20 @@ public partial class PaintEditor : UserControl
     private readonly string _relativePath;
     private readonly TempWorkspace _workspace;
 
-    private WriteableBitmap _bitmap;
     private bool _isDrawing;
     private Avalonia.Point _lastPoint;
-    private Avalonia.Media.Color _currentColor = Colors.Black;
+    private Color _currentColor = Colors.Black;
 
     private bool _isPanning;
     private Avalonia.Point _panStart;
     private Vector _scrollStart;
 
-    // Undo/Redo setup
-    private readonly Stack<WriteableBitmap> _undoStack = new();
-    private readonly Stack<WriteableBitmap> _redoStack = new();
+    private List<Layer> _layers = new();
+    private int _activeLayerIndex = 0;
+
+    private readonly Stack<List<WriteableBitmap>> _undoStack = new();
+    private readonly Stack<List<WriteableBitmap>> _redoStack = new();
+
     private enum ToolMode { Brush, Eraser, Bucket, Hand }
     private ToolMode _tool = ToolMode.Brush;
 
@@ -38,31 +40,40 @@ public partial class PaintEditor : UserControl
 
         InitializeComponent();
 
-        // Add swatch colors
-        ColorSwatches.ItemsSource = new SolidColorBrush[]
-{
-    new SolidColorBrush(Colors.Black),
-    new SolidColorBrush(Colors.White),
-    new SolidColorBrush(Colors.Red),
-    new SolidColorBrush(Colors.Green),
-    new SolidColorBrush(Colors.Blue),
-    new SolidColorBrush(Colors.Yellow),
-    new SolidColorBrush(Colors.Cyan),
-    new SolidColorBrush(Colors.Magenta),
-    new SolidColorBrush(Colors.Orange),
-    new SolidColorBrush(Colors.Purple),
-    new SolidColorBrush(Colors.Brown),
-    new SolidColorBrush(Colors.Gray)
-};
+        LoadOrCreateImage(); // Creates first layer
 
-        LoadOrCreateImage();
+        _layers[0].Name = "Layer 1";
+        _layers[0].Thumbnail = CreateThumbnail(_layers[0].Bitmap);
+
+        LayersList.ItemsSource = _layers;
+        LayersList.SelectedIndex = 0;
+
+        LayersList.SelectionChanged += (_, __) =>
+        {
+            _activeLayerIndex = LayersList.SelectedIndex;
+        };
+
+        ColorSwatches.ItemsSource = new SolidColorBrush[]
+        {
+            new SolidColorBrush(Colors.Black),
+            new SolidColorBrush(Colors.White),
+            new SolidColorBrush(Colors.Red),
+            new SolidColorBrush(Colors.Green),
+            new SolidColorBrush(Colors.Blue),
+            new SolidColorBrush(Colors.Yellow),
+            new SolidColorBrush(Colors.Cyan),
+            new SolidColorBrush(Colors.Magenta),
+            new SolidColorBrush(Colors.Orange),
+            new SolidColorBrush(Colors.Purple),
+            new SolidColorBrush(Colors.Brown),
+            new SolidColorBrush(Colors.Gray)
+        };
 
         CanvasImage.PointerPressed += OnPointerPressed;
         CanvasImage.PointerReleased += OnPointerReleased;
         CanvasImage.PointerMoved += OnPointerMoved;
 
         SaveButton.Click += (_, __) => Save();
-
         UndoButton.Click += (_, __) => Undo();
         RedoButton.Click += (_, __) => Redo();
         ClearButton.Click += (_, __) => Clear();
@@ -79,16 +90,62 @@ public partial class PaintEditor : UserControl
             }
         };
 
-        ScrollViewer scroll = this.FindControl<ScrollViewer>("CanvasScroll");
+        var scroll = this.FindControl<ScrollViewer>("CanvasScroll");
         scroll.PointerWheelChanged += OnPointerWheelChanged;
-
         scroll.PointerPressed += OnScrollPointerPressed;
         scroll.PointerReleased += OnScrollPointerReleased;
         scroll.PointerMoved += OnScrollPointerMoved;
 
-        EraserButton.Click += (_, __) => { _tool = ToolMode.Eraser; _currentColor = Colors.White; };
+        BrushButton.Click += (_, __) => { _tool = ToolMode.Brush; _currentColor = Colors.Black; _isPanning = false; };
+        EraserButton.Click += (_, __) => { _tool = ToolMode.Eraser; _currentColor = Colors.White; _isPanning = false; };
         HandToolButton.Click += (_, __) => { _tool = ToolMode.Hand; _isPanning = true; };
         BucketButton.Click += (_, __) => { _tool = ToolMode.Bucket; _isPanning = false; };
+
+        AddLayerButton.Click += (_, __) =>
+        {
+            var baseBmp = _layers[0].Bitmap;
+
+            var newLayer = new Layer
+            {
+                Name = $"Layer {_layers.Count + 1}",
+                Visible = true,
+                Opacity = 1.0,
+                Bitmap = new WriteableBitmap(baseBmp.PixelSize, baseBmp.Dpi,
+                                             PixelFormat.Bgra8888, AlphaFormat.Premul)
+            };
+
+            newLayer.Thumbnail = CreateThumbnail(newLayer.Bitmap);
+
+            _layers.Add(newLayer);
+            LayersList.ItemsSource = null;
+            LayersList.ItemsSource = _layers;
+            LayersList.SelectedIndex = _layers.Count - 1;
+
+            CanvasImage.Source = CompositeLayers();
+        };
+
+        DeleteLayerButton.Click += (_, __) =>
+        {
+            if (_layers.Count <= 1) return;
+
+            _layers.RemoveAt(_activeLayerIndex);
+            _activeLayerIndex = Math.Clamp(_activeLayerIndex - 1, 0, _layers.Count - 1);
+
+            LayersList.ItemsSource = null;
+            LayersList.ItemsSource = _layers;
+            LayersList.SelectedIndex = _activeLayerIndex;
+
+            CanvasImage.Source = CompositeLayers();
+        };
+    }
+
+    public void Save()
+    {
+        var fullPath = _workspace.MapToTemp(_relativePath);
+
+        using var fs = File.Open(fullPath, FileMode.Create);
+        var merged = CompositeLayers();
+        merged.Save(fs);
     }
 
     private void OnSwatchClicked(object? sender, PointerPressedEventArgs e)
@@ -100,51 +157,45 @@ public partial class PaintEditor : UserControl
     private void LoadOrCreateImage()
     {
         var fullPath = _workspace.MapToTemp(_relativePath);
+        WriteableBitmap bmp;
 
         try
         {
-
             if (File.Exists(fullPath))
             {
                 using var fs = File.OpenRead(fullPath);
-                var bmp = new Bitmap(fs); // Not all the time is this valid, so, catch it, and make it valid.
+                var src = new Bitmap(fs);
 
-                _bitmap = new WriteableBitmap(bmp.PixelSize, bmp.Dpi, PixelFormat.Bgra8888, AlphaFormat.Premul);
+                bmp = new WriteableBitmap(src.PixelSize, src.Dpi, PixelFormat.Bgra8888, AlphaFormat.Premul);
 
-                using (var fb = _bitmap.Lock())
-                {
-                    // Fix: Provide required PixelRect argument for CopyPixels
-                    bmp.CopyPixels(
-                        new PixelRect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height),
-                        fb.Address,
-                        fb.RowBytes * fb.Size.Height,
-                        fb.RowBytes
-                    );
-                }
+                using var fb = bmp.Lock();
+                src.CopyPixels(new PixelRect(0, 0, src.PixelSize.Width, src.PixelSize.Height),
+                               fb.Address, fb.RowBytes * fb.Size.Height, fb.RowBytes);
             }
             else
             {
-                _bitmap = new WriteableBitmap(
-                    new PixelSize(800, 600),
-                    new Vector(96, 96),
-                    PixelFormat.Bgra8888,
-                    AlphaFormat.Premul
-                );
+                bmp = new WriteableBitmap(new PixelSize(800, 600), new Vector(96, 96),
+                                          PixelFormat.Bgra8888, AlphaFormat.Premul);
             }
-        } catch
+        }
+        catch
         {
-            _bitmap = new WriteableBitmap(
-                new PixelSize(800, 600),
-                new Vector(96, 96),
-                PixelFormat.Bgra8888,
-                AlphaFormat.Premul
-            );
+            bmp = new WriteableBitmap(new PixelSize(800, 600), new Vector(96, 96),
+                                      PixelFormat.Bgra8888, AlphaFormat.Premul);
         }
 
-        pixelGrid.PixelWidth = _bitmap.PixelSize.Width;
-        pixelGrid.PixelHeight = _bitmap.PixelSize.Height;
+        _layers.Add(new Layer
+        {
+            Name = "Base",
+            Visible = true,
+            Opacity = 1.0,
+            Bitmap = bmp
+        });
 
-        CanvasImage.Source = _bitmap;
+        pixelGrid.PixelWidth = bmp.PixelSize.Width;
+        pixelGrid.PixelHeight = bmp.PixelSize.Height;
+
+        CanvasImage.Source = CompositeLayers();
     }
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -152,33 +203,31 @@ public partial class PaintEditor : UserControl
         if (_tool == ToolMode.Hand)
             return;
 
-        _undoStack.Push(CloneBitmap(_bitmap));
+        _undoStack.Push(CloneLayerBitmaps());
+        _redoStack.Clear();
 
         var point = ToBitmapSpace(e);
 
         if (_tool == ToolMode.Bucket)
         {
             FloodFill((int)point.X, (int)point.Y, _currentColor);
-            CanvasImage.InvalidateVisual();
+            CanvasImage.Source = CompositeLayers();
             return;
         }
 
         _isDrawing = true;
         _lastPoint = point;
-        DrawPoint(_lastPoint);
+        DrawPoint(point);
     }
 
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        if (_isPanning)
-            return;
-
         _isDrawing = false;
     }
 
     private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_isPanning || !_isDrawing)
+        if (!_isDrawing || _tool == ToolMode.Hand)
             return;
 
         var point = ToBitmapSpace(e);
@@ -188,15 +237,17 @@ public partial class PaintEditor : UserControl
 
     private void DrawPoint(Avalonia.Point p)
     {
-        using var fb = _bitmap.Lock();
+        var active = _layers[_activeLayerIndex].Bitmap;
+
+        using var fb = active.Lock();
         int size = (int)BrushSizeSlider.Value;
         uint color = _currentColor.ToUInt32();
 
         unsafe
         {
             uint* ptr = (uint*)fb.Address;
-            int width = _bitmap.PixelSize.Width;
-            int height = _bitmap.PixelSize.Height;
+            int width = active.PixelSize.Width;
+            int height = active.PixelSize.Height;
 
             for (int y = -size; y < size; y++)
             {
@@ -208,13 +259,12 @@ public partial class PaintEditor : UserControl
                     if (px < 0 || py < 0 || px >= width || py >= height)
                         continue;
 
-                    int offset = py * width + px;
-                    ptr[offset] = color;
+                    ptr[py * width + px] = color;
                 }
             }
         }
 
-        CanvasImage.InvalidateVisual();
+        CanvasImage.Source = CompositeLayers();
     }
 
     private void DrawLine(Avalonia.Point a, Avalonia.Point b)
@@ -223,56 +273,123 @@ public partial class PaintEditor : UserControl
 
         for (int i = 0; i < steps; i++)
         {
-            double t = (double)i / steps;
-            var x = a.X + (b.X - a.X) * t;
-            var y = a.Y + (b.Y - a.Y) * t;
-            DrawPoint(new Avalonia.Point(x, y));
+            double t = i / (double)steps;
+            DrawPoint(new Avalonia.Point(a.X + (b.X - a.X) * t,
+                                         a.Y + (b.Y - a.Y) * t));
         }
-    }
-
-    public void Save()
-    {
-        var fullPath = _workspace.MapToTemp(_relativePath);
-
-        using var fs = File.Open(fullPath, FileMode.Create);
-        _bitmap.Save(fs);
     }
 
     private Avalonia.Point ToBitmapSpace(PointerEventArgs e)
     {
-        // 1. Pointer position relative to ScrollViewer
         var scroll = this.FindControl<ScrollViewer>("CanvasScroll");
         var pos = e.GetPosition(scroll);
 
-        // 2. Transform ScrollViewer → ZoomContainer
         var transform = scroll.TransformToVisual(ZoomContainer);
         var zoomSpace = transform?.Transform(pos) ?? pos;
 
-        // 3. Divide by zoom scale to get bitmap pixel coordinates
         double scale = ZoomSlider.Value;
         return new Avalonia.Point(zoomSpace.X / scale, zoomSpace.Y / scale);
     }
 
-    private WriteableBitmap CloneBitmap(WriteableBitmap source)
+    private unsafe void FloodFill(int x, int y, Color newColor)
     {
-        var clone = new WriteableBitmap(
-            source.PixelSize,
-            source.Dpi,
-            source.Format,
-            source.AlphaFormat);
+        var active = _layers[_activeLayerIndex].Bitmap;
+
+        using var fb = active.Lock();
+
+        int width = active.PixelSize.Width;
+        int height = active.PixelSize.Height;
+
+        uint* ptr = (uint*)fb.Address;
+        uint target = ptr[y * width + x];
+        uint replacement = newColor.ToUInt32();
+
+        if (target == replacement)
+            return;
+
+        Stack<(int X, int Y)> stack = new();
+        stack.Push((x, y));
+
+        while (stack.Count > 0)
+        {
+            var (px, py) = stack.Pop();
+
+            int left = px;
+            int right = px;
+
+            while (left >= 0 && ptr[py * width + left] == target) left--;
+            while (right < width && ptr[py * width + right] == target) right++;
+
+            for (int i = left + 1; i < right; i++)
+            {
+                ptr[py * width + i] = replacement;
+
+                if (py > 0 && ptr[(py - 1) * width + i] == target)
+                    stack.Push((i, py - 1));
+
+                if (py < height - 1 && ptr[(py + 1) * width + i] == target)
+                    stack.Push((i, py + 1));
+            }
+        }
+
+        CanvasImage.Source = CompositeLayers();
+    }
+
+    private WriteableBitmap CompositeLayers()
+    {
+        var baseLayer = _layers[0].Bitmap;
+        var result = new WriteableBitmap(baseLayer.PixelSize, baseLayer.Dpi,
+                                         PixelFormat.Bgra8888, AlphaFormat.Premul);
+
+        using var fb = result.Lock();
 
         unsafe
         {
+            uint* dst = (uint*)fb.Address;
 
-            using (var src = source.Lock())
-            using (var dst = clone.Lock())
+            foreach (var layer in _layers)
             {
-                Buffer.MemoryCopy(
-                    src.Address.ToPointer(),
-                    dst.Address.ToPointer(),
-                    dst.RowBytes * dst.Size.Height,
-                    src.RowBytes * src.Size.Height);
+                if (!layer.Visible) continue;
+
+                using var srcLock = layer.Bitmap.Lock();
+                uint* src = (uint*)srcLock.Address;
+
+                int count = layer.Bitmap.PixelSize.Width * layer.Bitmap.PixelSize.Height;
+
+                for (int i = 0; i < count; i++)
+                {
+                    uint pixel = src[i];
+                    if ((pixel >> 24) != 0)
+                        dst[i] = Blend(dst[i], pixel, layer.Opacity);
+                }
             }
+        }
+
+        return result;
+    }
+
+    private List<WriteableBitmap> CloneLayerBitmaps()
+    {
+        var list = new List<WriteableBitmap>();
+        foreach (var layer in _layers)
+            list.Add(CloneBitmap(layer.Bitmap));
+        return list;
+    }
+
+    private WriteableBitmap CloneBitmap(WriteableBitmap source)
+    {
+        var clone = new WriteableBitmap(source.PixelSize, source.Dpi,
+                                        source.Format, source.AlphaFormat);
+
+        unsafe
+        {
+            using var src = source.Lock();
+            using var dst = clone.Lock();
+
+            Buffer.MemoryCopy(src.Address.ToPointer(),
+                              dst.Address.ToPointer(),
+                              dst.RowBytes * dst.Size.Height,
+                              src.RowBytes * src.Size.Height);
         }
 
         return clone;
@@ -283,10 +400,13 @@ public partial class PaintEditor : UserControl
         if (_undoStack.Count == 0)
             return;
 
-        _redoStack.Push(CloneBitmap(_bitmap));
-        _bitmap = _undoStack.Pop();
-        CanvasImage.Source = _bitmap;
-        CanvasImage.InvalidateVisual();
+        var prev = _undoStack.Pop();
+        _redoStack.Push(CloneLayerBitmaps());
+
+        for (int i = 0; i < _layers.Count; i++)
+            _layers[i].Bitmap = prev[i];
+
+        CanvasImage.Source = CompositeLayers();
     }
 
     private void Redo()
@@ -294,28 +414,34 @@ public partial class PaintEditor : UserControl
         if (_redoStack.Count == 0)
             return;
 
-        _undoStack.Push(CloneBitmap(_bitmap));
-        _bitmap = _redoStack.Pop();
-        CanvasImage.Source = _bitmap;
-        CanvasImage.InvalidateVisual();
+        var next = _redoStack.Pop();
+        _undoStack.Push(CloneLayerBitmaps());
+
+        for (int i = 0; i < _layers.Count; i++)
+            _layers[i].Bitmap = next[i];
+
+        CanvasImage.Source = CompositeLayers();
     }
 
     private void Clear()
     {
-        _undoStack.Push(CloneBitmap(_bitmap));
+        _undoStack.Push(CloneLayerBitmaps());
         _redoStack.Clear();
 
-        using var fb = _bitmap.Lock();
+        var active = _layers[_activeLayerIndex].Bitmap;
+
+        using var fb = active.Lock();
         unsafe
         {
             Buffer.MemoryCopy(
-                new byte[_bitmap.PixelSize.Width * _bitmap.PixelSize.Height * 4].AsSpan().ToArray().AsMemory().Pin().Pointer,
+                new byte[active.PixelSize.Width * active.PixelSize.Height * 4]
+                    .AsSpan().ToArray().AsMemory().Pin().Pointer,
                 fb.Address.ToPointer(),
                 fb.RowBytes * fb.Size.Height,
                 fb.RowBytes * fb.Size.Height);
         }
 
-        CanvasImage.InvalidateVisual();
+        CanvasImage.Source = CompositeLayers();
     }
 
     private void OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
@@ -346,7 +472,6 @@ public partial class PaintEditor : UserControl
     {
         var scroll = (ScrollViewer)sender;
 
-        // Middle mouse OR Hand Tool mode
         if (e.GetCurrentPoint(scroll).Properties.IsMiddleButtonPressed || _isPanning)
         {
             _panStart = e.GetPosition(scroll);
@@ -379,53 +504,47 @@ public partial class PaintEditor : UserControl
         }
     }
 
-    private unsafe void FloodFill(int x, int y, Color newColor)
+    private WriteableBitmap CreateThumbnail(WriteableBitmap source, int size = 64)
     {
-        using var fb = _bitmap.Lock();
+        var thumb = new WriteableBitmap(new PixelSize(size, size), new Vector(96, 96),
+                                        PixelFormat.Bgra8888, AlphaFormat.Premul);
 
-        int width = _bitmap.PixelSize.Width;
-        int height = _bitmap.PixelSize.Height;
+        using var src = source.Lock();
+        using var dst = thumb.Lock();
 
-        uint* ptr = (uint*)fb.Address;
-        int index = y * width + x;
-
-        uint targetColor = ptr[index];
-        uint replacementColor = newColor.ToUInt32();
-
-        if (targetColor == replacementColor)
-            return;
-
-        Stack<(int X, int Y)> stack = new();
-        stack.Push((x, y));
-
-        while (stack.Count > 0)
+        unsafe
         {
-            var (px, py) = stack.Pop();
+            uint* srcPtr = (uint*)src.Address;
+            uint* dstPtr = (uint*)dst.Address;
 
-            int left = px;
-            int right = px;
+            int w = source.PixelSize.Width;
+            int h = source.PixelSize.Height;
 
-            // Move left
-            while (left >= 0 && ptr[py * width + left] == targetColor)
-                left--;
-
-            // Move right
-            while (right < width && ptr[py * width + right] == targetColor)
-                right++;
-
-            // Fill the scanline
-            for (int i = left + 1; i < right; i++)
+            for (int y = 0; y < size; y++)
             {
-                ptr[py * width + i] = replacementColor;
-
-                // Check above
-                if (py > 0 && ptr[(py - 1) * width + i] == targetColor)
-                    stack.Push((i, py - 1));
-
-                // Check below
-                if (py < height - 1 && ptr[(py + 1) * width + i] == targetColor)
-                    stack.Push((i, py + 1));
+                int sy = y * h / size;
+                for (int x = 0; x < size; x++)
+                {
+                    int sx = x * w / size;
+                    dstPtr[y * size + x] = srcPtr[sy * w + sx];
+                }
             }
         }
+
+        return thumb;
+    }
+
+    uint Blend(uint dst, uint src, double opacity)
+    {
+        byte sa = (byte)(src >> 24);
+        byte sr = (byte)(src >> 16);
+        byte sg = (byte)(src >> 8);
+        byte sb = (byte)(src);
+
+        sa = (byte)(sa * opacity);
+
+        if (sa == 0) return dst;
+
+        return (uint)(sa << 24 | sr << 16 | sg << 8 | sb);
     }
 }
