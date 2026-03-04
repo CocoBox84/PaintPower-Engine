@@ -35,9 +35,9 @@ public class Server
         // Creating a custom server? Make a issue on Github and i'll add it here!
         Domain d1 = new Domain("xpaint.cocoink.ink");
         Domain d2 = new Domain("paint.cocoink.ink");
-        Domain d3 = new Domain("127.0.0.1:5500");
-        Domain d4 = new Domain("127.0.0.1:5000");
-        Domain d5 = new Domain("127.0.0.1:3000");
+        Domain d3 = new Domain("127.0.0.1:5500/f/xPaint");
+        Domain d4 = new Domain("127.0.0.1:5000/f/xPaint");
+        Domain d5 = new Domain("127.0.0.1:3000/f/xPaint");
         Domain d6 = new Domain("127.0.0.1:8000");
         Domain d7 = new Domain("localhost:5500");
         Domain d8 = new Domain("localhost:5000");
@@ -48,9 +48,9 @@ public class Server
         Domain d13 = new Domain("paint-website.onrender.com");
         Domain d14 = new Domain("paintpower.cocoink.ink");
         Domain d15 = new Domain("cocoink.ink");
-        Domain d16 = new Domain("cocoink.ink/xPaint");
-        Domain d17 = new Domain("cocoink.ink/Paint");
-        Domain d18 = new Domain("cocoink.ink/PaintPower");
+        Domain d16 = new Domain("cocoink.ink/f/xPaint");
+        Domain d17 = new Domain("cocoink.ink/f/Paint");
+        Domain d18 = new Domain("cocoink.ink/f/PaintPower");
         Domain d19 = new Domain("negro.org");
         Domain d20 = new Domain("example.com");
 
@@ -59,6 +59,8 @@ public class Server
         AllowDomain(d6); AllowDomain(d7); AllowDomain(d8); AllowDomain(d9); AllowDomain(d10);
         AllowDomain(d11); AllowDomain(d12); AllowDomain(d13); AllowDomain(d14); AllowDomain(d15);
         AllowDomain(d16); AllowDomain(d17); AllowDomain(d18); AllowDomain(d19); AllowDomain(d20);
+
+        setActiveDomain(d3);
     }
 
     public void setActiveDomain(Domain domain)
