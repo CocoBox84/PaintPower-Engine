@@ -31,7 +31,7 @@
 					<Button Classes="white" Content="File" />
 					<Button Classes="white" Content="Edit" />
 					<Button Classes="white" Content="New" />
-					<Button Classes="white" Content="Save" />
+					<Button Classes="white" Content="Save" x:Name="SaveButton" />
 					<Button Classes="white" Content="Save As" />
 					<Button Classes="white" Content="Make connection" />
 				</StackPanel>

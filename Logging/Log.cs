@@ -2,6 +2,8 @@
 using System;
 using System.Diagnostics;
 
+namespace PaintPower.Logging;
+
 public static class Log
 {
     public static void log(string message, int level)

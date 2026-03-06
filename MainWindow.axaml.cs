@@ -7,13 +7,15 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using PaintPower.Networking;
+using PaintPower.Logging;
+using System.Diagnostics;
 namespace PaintPower;
 
 public partial class MainWindow : Window
 {
     private readonly Editor _editorManager;
     private readonly PaintProject _project;
-    private Control _editor;
+    private EditorBase _editor;
     public Server server;
 
     public MainWindow()
@@ -23,6 +25,7 @@ public partial class MainWindow : Window
         _project = new PaintProject();
         _editorManager = new Editor(_project.Workspace);
         server = new Server();
+        SaveButton.Click += (_, __) => Save();
     }
 
     protected override async void OnOpened(EventArgs e)
@@ -52,7 +55,7 @@ public partial class MainWindow : Window
         }
     }
 
-    public void OpenEditor(Control editor)
+    public void OpenEditor(EditorBase editor)
     {
         _editor = editor;
         EditorHost.Content = editor;
@@ -70,6 +73,35 @@ public partial class MainWindow : Window
         _editor = null;
     }
 
-    public void save() {
+    async public void Save() {
+        try
+        {
+            var doSave = false;
+            var result = "";
+            try
+            {
+                result = await new DoSaveWindowDialog().ShowAsync(this);
+            }
+            catch (Exception ex) { Log.QuickLog($"Error with dialog. {ex.ToString()}"); }
+            ;
+            doSave = result == "save";
+            if (result == "saveas") SaveAs();
+            if (!doSave) {
+                Log.QuickLog($"Not saving. {result} {doSave}");
+                return; 
+            }
+            Log.QuickLog("Saving Project...");
+            ProjectSaver.Save(_project, _editor);
+            Log.QuickLog("Project Saved!");
+        } catch(Exception ex) { Log.QuickLog($"Error while saving project! {ex.ToString()}"); };
+    }
+
+    async public void SaveAs() { }
+
+    public void SaveToServer()
+    {
+        var doSave = false;
+        if (!doSave) return;
+        ProjectSaver.PublishToServer(_project, _editor, server);
     }
 }

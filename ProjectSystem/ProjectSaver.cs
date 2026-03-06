@@ -1,4 +1,5 @@
 ﻿using PaintPower.Networking;
+using PaintPower.Editors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,14 +12,14 @@ namespace PaintPower.ProjectSystem;
 
 class ProjectSaver {
     // Main function that should be called when saving a project.
-    public static void Save(PaintProject project)
+    public static void Save(PaintProject project, EditorBase editor)
     {
-        Editors.Editor.SaveEditor(); // Save in temp
-        project.SaveToDisk(); // Make zip from temp
+        if (editor != null) editor.Save(); // Save editor first
+        if (project != null) project.SaveToDisk(); // Make zip from temp
     }
 
-    public static void PublishToServer(PaintProject project, Server server)
+    public static void PublishToServer(PaintProject project, EditorBase editor, Server server)
     {
-        // To add later
+        Save(project, editor);
     }
 }

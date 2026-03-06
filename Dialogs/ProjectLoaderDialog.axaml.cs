@@ -24,7 +24,8 @@ public partial class ProjectLoaderDialog : Window
         {
             Title = "Create New Project",
             DefaultExtension = "xPaint",
-            SuggestedFileName = "NewProject.xPaint"
+            SuggestedFileName = "NewProject.xPaint",
+            ShowOverwritePrompt = true
         });
 
         if (savePicker != null)

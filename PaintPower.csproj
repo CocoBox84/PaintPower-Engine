@@ -40,4 +40,10 @@
     <Folder Include="EditorTools\" />
     <Folder Include="FileExplorer\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Dialogs\DoSaveWindowDialog.axaml.cs">
+      <DependentUpon>DoSaveWindowDialog.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

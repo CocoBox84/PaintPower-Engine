@@ -59,6 +59,26 @@ public class PaintProject
     }
 
     // -------------------------
+    // SAVE PROJECT AS ZIP
+    // -------------------------
+    public void SaveToZip()
+    {
+        if (string.IsNullOrWhiteSpace(ProjectPath))
+            throw new Exception("ProjectPath is not set.");
+
+        // Update metadata file
+        SaveMetadata();
+
+        // Recreate ZIP
+        if (File.Exists(ProjectPath))
+            File.Delete(ProjectPath);
+
+        ZipFile.CreateFromDirectory(Workspace.Root, Path.Combine(Workspace.Root, "..", "Paintfile", "file.zip"));
+    }
+    public void ClearTempZip() {
+        File.Delete(Path.Combine(Workspace.Root, "..", "Paintfile", "file.zip"));
+    }
+    // -------------------------
     // SAVE PROJECT
     // -------------------------
     public void SaveToDisk()
