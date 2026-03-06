@@ -13,6 +13,7 @@ public partial class DoSaveWindowDialog : Window
         InitializeComponent();
         Title = "Overwrite your old data?!";
         PromptText.Text = "Do you want to overwrite your save data?";
+        PromptText2.Text = "(This will save your work in the currently open editor.)";
         _tcs = new TaskCompletionSource<string?>();
         this.Closed += (_, __) => _tcs.TrySetResult(null);
     }

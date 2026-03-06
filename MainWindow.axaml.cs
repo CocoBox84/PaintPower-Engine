@@ -82,7 +82,7 @@ public partial class MainWindow : Window
             {
                 result = await new DoSaveWindowDialog().ShowAsync(this);
             }
-            catch (Exception ex) { Log.QuickLog($"Error with dialog. {ex.ToString()}"); }
+            catch (Exception ex) { Log.QuickLog($"Error with dialog. {ex.ToString()}"); };
             ;
             doSave = result == "save";
             if (result == "saveas") SaveAs();
