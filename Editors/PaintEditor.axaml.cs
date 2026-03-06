@@ -76,6 +76,9 @@ public partial class PaintEditor : EditorBase
                 CheckerZoom.LayoutTransform = new ScaleTransform(scale, scale);
                 CheckerZoom.InvalidateVisual();
 
+                BrushCursor.RenderTransform = new ScaleTransform(scale, scale);
+                BrushCursor.InvalidateVisual();
+
                 pixelGrid.Zoom = scale;
                 pixelGrid.InvalidateVisual();
             }
@@ -87,10 +90,24 @@ public partial class PaintEditor : EditorBase
         scroll.PointerReleased += OnScrollPointerReleased;
         scroll.PointerMoved += OnScrollPointerMoved;
 
-        BrushButton.Click += (_, __) => { _tool = ToolMode.Brush; _currentColor = Colors.Black; _isPanning = false; };
-        EraserButton.Click += (_, __) => { _tool = ToolMode.Eraser; _currentColor = Colors.White; _isPanning = false; };
-        HandToolButton.Click += (_, __) => { _tool = ToolMode.Hand; _isPanning = true; };
-        BucketButton.Click += (_, __) => { _tool = ToolMode.Bucket; _isPanning = false; };
+        void ResetCursor()
+        {
+            CanvasImage.Cursor = new Cursor(StandardCursorType.Arrow);
+            BrushCursor.IsVisible = false;
+        }
+
+        BrushButton.Click += (_, __) =>
+        {
+            _tool = ToolMode.Brush;
+            _currentColor = Colors.Black;
+            _isPanning = false;
+
+            CanvasImage.Cursor = new Cursor(StandardCursorType.None);
+            BrushCursor.IsVisible = true;
+        };
+        EraserButton.Click += (_, __) => { _tool = ToolMode.Eraser; _currentColor = Colors.White; _isPanning = false; ResetCursor(); };
+        HandToolButton.Click += (_, __) => { _tool = ToolMode.Hand; _isPanning = true; ResetCursor(); };
+        BucketButton.Click += (_, __) => { _tool = ToolMode.Bucket; _isPanning = false; ResetCursor(); };
     }
 
     override public void Save()
@@ -165,6 +182,19 @@ public partial class PaintEditor : EditorBase
 
     private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
+        var pos = e.GetPosition(CanvasImage);
+        if (BrushCursor.IsVisible)
+        {
+            // Offset so the tip of the pencil matches the brush point
+            double offsetX = -5;
+            double offsetY = -54;
+
+            BrushCursor.Margin = new Thickness(
+                pos.X + offsetX,
+                pos.Y + offsetY,
+                0, 0);
+        }
+
         if (!_isDrawing || _tool == ToolMode.Hand)
             return;
 

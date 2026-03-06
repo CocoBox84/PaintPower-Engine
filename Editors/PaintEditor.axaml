@@ -64,6 +64,16 @@
 						</LayoutTransformControl>
 					</ScrollViewer>
 
+					<Image x:Name="BrushCursor"
+					   Source="avares://PaintPower/Assets/Pencil.png"
+					   Width="54"
+					   Height="54"
+					   IsHitTestVisible="False"
+					   HorizontalAlignment="Left"
+					   VerticalAlignment="Top"
+					   Opacity="1"
+					   />
+
 					<local:PixelGrid x:Name="pixelGrid"
 									 IsHitTestVisible="False"
 									 HorizontalAlignment="Left"
