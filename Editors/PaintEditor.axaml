@@ -17,14 +17,14 @@
 					HorizontalAlignment="Left"
 					Spacing="16"
 					Margin="12">
-			<Button x:Name="UndoButton" Content="Undo" Width="80"/>
-			<Button x:Name="SaveButton" Content="Save" Width="80"/>
-			<Button x:Name="ClearButton" Content="Clear" Width="80"/>
-			<Button x:Name="RedoButton" Content="Redo" Width="80"/>
+			<Button Classes="white" x:Name="UndoButton" Content="Undo" Width="80"/>
+			<Button Classes="white" x:Name="SaveButton" Content="Save" Width="80"/>
+			<Button Classes="white" x:Name="ClearButton" Content="Clear" Width="80"/>
+			<Button Classes="white" x:Name="RedoButton" Content="Redo" Width="80"/>
 		</StackPanel>
 
 		<!-- 3-COLUMN AREA -->
-		<Grid Grid.Row="1" ColumnDefinitions="220,*,220">
+		<Grid Grid.Row="1" ColumnDefinitions="0,*,Auto,220">
 
 			<!-- LEFT COLUMN -->
 			<Border Grid.Column="0"
@@ -32,46 +32,30 @@
 					Padding="8">
 				<StackPanel Spacing="12"
 							VerticalAlignment="Top">
-					<Button x:Name="AddLayerButton" Content="Add Layer" Margin="0,8,0,0"/>
-					<Button x:Name="DeleteLayerButton" Content="Delete Layer"/>
-					<ListBox x:Name="LayersList"
-         Background="#303030"
-         BorderThickness="0"
-         Foreground="White">
-						<ListBox.ItemTemplate>
-							<DataTemplate x:DataType="local:Layer">
-								<StackPanel Orientation="Horizontal" Spacing="8">
-									<CheckBox IsChecked="{Binding Visible}" VerticalAlignment="Center"/>
-
-									<Image Source="{Binding Thumbnail}"
-										   Width="40" Height="40"
-										   Stretch="Uniform"
-										   Margin="4"/>
-
-									<StackPanel>
-										<TextBlock Text="{Binding Name}" Foreground="White"/>
-										<Slider Minimum="0" Maximum="1"
-												Value="{Binding Opacity}"
-												Width="60"/>
-									</StackPanel>
-								</StackPanel>
-							</DataTemplate>
-						</ListBox.ItemTemplate>
-					</ListBox>
 				</StackPanel>
 			</Border>
 
 			<!-- CENTER COLUMN: CANVAS WITH VIEWPORT -->
 			<Border Grid.Column="1"
-					Margin="8"
-					Background="Cyan">
+					Margin="8">
 
 				<Grid>
+					<!-- Checkered background -->
+					<LayoutTransformControl x:Name="CheckerZoom"
+											HorizontalAlignment="Left"
+											VerticalAlignment="Top">
+						<local:Checkerboard x:Name="Checkerboard"
+                    TileSize="16"
+                    LightColor="#FFF0F0F0"
+                    DarkColor="#FFD0D0D0"
+                    Width="{Binding #CanvasImage.Bounds.Width}"
+                    Height="{Binding #CanvasImage.Bounds.Height}"/>
+					</LayoutTransformControl>
 
 					<!-- Scrollable zoomable canvas -->
 					<ScrollViewer x:Name="CanvasScroll"
-						  HorizontalScrollBarVisibility="Auto"
-						  VerticalScrollBarVisibility="Auto">
+								  HorizontalScrollBarVisibility="Auto"
+								  VerticalScrollBarVisibility="Auto">
 						<LayoutTransformControl x:Name="ZoomContainer">
 							<Image x:Name="CanvasImage"
 								   Stretch="None"
@@ -81,9 +65,9 @@
 					</ScrollViewer>
 
 					<local:PixelGrid x:Name="pixelGrid"
-                 IsHitTestVisible="False"
-                 HorizontalAlignment="Left"
-                 VerticalAlignment="Top"/>
+									 IsHitTestVisible="False"
+									 HorizontalAlignment="Left"
+									 VerticalAlignment="Top"/>
 
 					<!-- Floating zoom controls -->
 					<Border Background="#80000000"
@@ -94,68 +78,87 @@
 							Margin="10">
 						<StackPanel Orientation="Horizontal"
 									Spacing="8">
-
 							<TextBlock Text="Zoom"
 									   Foreground="White"
 									   VerticalAlignment="Center"/>
-
 							<Slider x:Name="ZoomSlider"
 									Minimum="0.1"
 									Maximum="8"
 									Value="1"
 									Width="150"/>
-
 						</StackPanel>
 					</Border>
-
 				</Grid>
 			</Border>
 
+			<!-- RESIZER -->
+			<GridSplitter Grid.Column="2"
+			  Width="5"
+			  Background="#606060"
+			  ResizeDirection="Columns"
+			  ResizeBehavior="PreviousAndNext"
+			  HorizontalAlignment="Stretch"/>
+
+
 			<!-- RIGHT COLUMN -->
-			<Border Grid.Column="2"
+			<Border Grid.Column="3"
 					Background="#e0e0e0"
 					Padding="12">
-				<StackPanel Spacing="12"
+				<ScrollViewer VerticalScrollBarVisibility="Auto">
+
+					<StackPanel Spacing="12"
 							VerticalAlignment="Top">
 
-					<TextBlock Text="Brush Size" />
-					<Slider x:Name="BrushSizeSlider"
-							Minimum="1" Maximum="50"
-							Width="150"
-							Value="8"/>
+						<TextBlock Text="Brush Size" />
+						<Slider x:Name="BrushSizeSlider"
+								Minimum="1" Maximum="50"
+								Width="150"
+								Value="8"/>
 
-					<TextBlock Text="Color" />
+						<TextBlock Text="Color" />
 
-					<Border Background="White"
-							CornerRadius="4"
-							Padding="4">
-						<ItemsControl x:Name="ColorSwatches">
-							<ItemsControl.ItemsPanel>
-								<ItemsPanelTemplate>
-									<WrapPanel Orientation="Horizontal"/>
-								</ItemsPanelTemplate>
-							</ItemsControl.ItemsPanel>
+						<Border Background="White"
+			CornerRadius="4"
+			Padding="4">
+							<StackPanel Spacing="8">
 
-							<ItemsControl.ItemTemplate>
-								<DataTemplate>
-									<Border Width="24" Height="24"
-											Background="{Binding}"
-											CornerRadius="4"
-											Margin="2"
-											BorderBrush="Black"
-											BorderThickness="1"
-											PointerPressed="OnSwatchClicked"/>
-								</DataTemplate>
-							</ItemsControl.ItemTemplate>
-						</ItemsControl>
-					</Border>
+								<TextBlock Text="Color" />
 
-					<Button x:Name="BrushButton" Content="Brush" Width="150"/>
-					<Button x:Name="EraserButton" Content="Eraser" Width="150"/>
-					<Button x:Name="HandToolButton" Content="Hand Tool" Width="150"/>
-					<Button x:Name="BucketButton" Content="Bucket" Width="150"/>
+								<!-- Preview -->
+								<Border x:Name="ColorPreview"
+										Width="40" Height="40"
+										Background="Black"
+										BorderBrush="Gray"
+										BorderThickness="1"
+										CornerRadius="4"/>
 
-				</StackPanel>
+								<!-- Hue slider -->
+								<Slider x:Name="HueSlider"
+										Minimum="0" Maximum="360"
+										Value="0"
+										Width="150"/>
+
+								<!-- Saturation/Value square -->
+								<local:SVPicker x:Name="SVPicker"
+												Width="150" Height="150"/>
+
+								<!-- Opacity slider -->
+								<TextBlock Text="Opacity"/>
+								<Slider x:Name="OpacitySlider"
+										Minimum="0" Maximum="255"
+										Value="255"
+										Width="150"/>
+
+							</StackPanel>
+						</Border>
+
+						<Button Classes="white" x:Name="BrushButton" Content="Brush" Width="150"/>
+						<Button Classes="white" x:Name="EraserButton" Content="Eraser" Width="150"/>
+						<Button Classes="white" x:Name="HandToolButton" Content="Hand Tool" Width="150"/>
+						<Button Classes="white" x:Name="BucketButton" Content="Bucket" Width="150"/>
+
+					</StackPanel>
+				</ScrollViewer>
 			</Border>
 
 		</Grid>

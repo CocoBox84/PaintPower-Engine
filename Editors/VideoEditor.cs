@@ -3,7 +3,7 @@
 using PaintPower.ProjectSystem;
 using Avalonia.Controls;
 
-public class VideoEditor : UserControl
+public class VideoEditor : EditorBase
 {
     public VideoEditor(string path, TempWorkspace workspace)
     {

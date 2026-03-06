@@ -9,7 +9,7 @@ using System.IO;
 
 namespace PaintPower.Editors;
 
-public partial class ScriptEditor : UserControl
+public partial class ScriptEditor : EditorBase
 {
     private readonly string _relativePath;
     private readonly TempWorkspace _workspace;
@@ -48,7 +48,7 @@ public partial class ScriptEditor : UserControl
         editor.TextChanged += (_, __) => Save();
     }
 
-    public void Save()
+    override public void Save()
     {
         var editor = this.FindControl<TextEditor>("Editor");
         _workspace.SaveFile(_relativePath, editor.Text);

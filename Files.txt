@@ -1,552 +1,84 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
-using PaintPower.ProjectSystem;
-using System;
-using System.Collections.Generic;
-using System.IO;
-
-namespace PaintPower.Editors;
-
-public partial class PaintEditor : UserControl
-{
-    private readonly string _relativePath;
-    private readonly TempWorkspace _workspace;
-
-    private bool _isDrawing;
-    private Avalonia.Point _lastPoint;
-    private Color _currentColor = Colors.Black;
-
-    private bool _isPanning;
-    private Avalonia.Point _panStart;
-    private Vector _scrollStart;
-
-    private List<Layer> _layers = new();
-    private int _activeLayerIndex = 0;
-
-    private readonly Stack<List<WriteableBitmap>> _undoStack = new();
-    private readonly Stack<List<WriteableBitmap>> _redoStack = new();
-
-    private enum ToolMode { Brush, Eraser, Bucket, Hand }
-    private ToolMode _tool = ToolMode.Brush;
-
-    public PaintEditor(string relativePath, TempWorkspace workspace)
-    {
-        _relativePath = relativePath;
-        _workspace = workspace;
-
-        InitializeComponent();
-
-        InitializeComponent();
-
-        LoadOrCreateImage(); // This creates the first layer
-
-        // Now fix the base layer name
-        _layers[0].Name = "Layer 1";
-
-        // Bind to UI
-        LayersList.ItemsSource = _layers;
-        LayersList.SelectedIndex = 0;
-
-        LayersList.SelectionChanged += (_, __) =>
-        {
-            _activeLayerIndex = LayersList.SelectedIndex;
-        };
-
-        // Swatches
-        ColorSwatches.ItemsSource = new SolidColorBrush[]
-        {
-            new SolidColorBrush(Colors.Black),
-            new SolidColorBrush(Colors.White),
-            new SolidColorBrush(Colors.Red),
-            new SolidColorBrush(Colors.Green),
-            new SolidColorBrush(Colors.Blue),
-            new SolidColorBrush(Colors.Yellow),
-            new SolidColorBrush(Colors.Cyan),
-            new SolidColorBrush(Colors.Magenta),
-            new SolidColorBrush(Colors.Orange),
-            new SolidColorBrush(Colors.Purple),
-            new SolidColorBrush(Colors.Brown),
-            new SolidColorBrush(Colors.Gray)
-        };
-
-        CanvasImage.PointerPressed += OnPointerPressed;
-        CanvasImage.PointerReleased += OnPointerReleased;
-        CanvasImage.PointerMoved += OnPointerMoved;
-
-        SaveButton.Click += (_, __) => Save();
-        UndoButton.Click += (_, __) => Undo();
-        RedoButton.Click += (_, __) => Redo();
-        ClearButton.Click += (_, __) => Clear();
-
-        ZoomSlider.PropertyChanged += (_, e) =>
-        {
-            if (e.Property == Slider.ValueProperty)
-            {
-                double scale = ZoomSlider.Value;
-                ZoomContainer.LayoutTransform = new ScaleTransform(scale, scale);
-
-                pixelGrid.Zoom = scale;
-                pixelGrid.InvalidateVisual();
-            }
-        };
-
-        var scroll = this.FindControl<ScrollViewer>("CanvasScroll");
-        scroll.PointerWheelChanged += OnPointerWheelChanged;
-        scroll.PointerPressed += OnScrollPointerPressed;
-        scroll.PointerReleased += OnScrollPointerReleased;
-        scroll.PointerMoved += OnScrollPointerMoved;
-
-        BrushButton.Click += (_, __) => { _tool = ToolMode.Brush; _currentColor = Colors.Black; _isPanning = false; };
-        EraserButton.Click += (_, __) => { _tool = ToolMode.Eraser; _currentColor = Colors.White; _isPanning = false; };
-        HandToolButton.Click += (_, __) => { _tool = ToolMode.Hand; _isPanning = true; };
-        BucketButton.Click += (_, __) => { _tool = ToolMode.Bucket; _isPanning = false; };
-
-        AddLayerButton.Click += (_, __) =>
-        {
-            var baseBmp = _layers[0].Bitmap;
-
-            var newLayer = new Layer
-            {
-                Name = $"Layer {_layers.Count + 1}",
-                Visible = true,
-                Bitmap = new WriteableBitmap(baseBmp.PixelSize, baseBmp.Dpi,
-                                             PixelFormat.Bgra8888, AlphaFormat.Premul)
-            };
-
-            newLayer.Thumbnail = CreateThumbnail(newLayer.Bitmap);
-
-            _layers.Add(newLayer);
-            LayersList.ItemsSource = null;
-            LayersList.ItemsSource = _layers;
-            LayersList.SelectedIndex = _layers.Count - 1;
-
-            CanvasImage.Source = CompositeLayers();
-        };
-
-        DeleteLayerButton.Click += (_, __) =>
-        {
-            if (_layers.Count <= 1) return;
-
-            _layers.RemoveAt(_activeLayerIndex);
-            _activeLayerIndex = Math.Clamp(_activeLayerIndex - 1, 0, _layers.Count - 1);
-
-            LayersList.ItemsSource = null;
-            LayersList.ItemsSource = _layers;
-            LayersList.SelectedIndex = _activeLayerIndex;
-
-            CanvasImage.Source = CompositeLayers();
-        };
-    }
-
-    public void Save()
-    {
-        var fullPath = _workspace.MapToTemp(_relativePath);
-
-        using var fs = File.Open(fullPath, FileMode.Create);
-        var merged = CompositeLayers();
-        merged.Save(fs);
-    }
-
-    private void OnSwatchClicked(object? sender, PointerPressedEventArgs e)
-    {
-        if (sender is Border b && b.Background is SolidColorBrush brush)
-            _currentColor = brush.Color;
-    }
-
-    private void LoadOrCreateImage()
-    {
-        var fullPath = _workspace.MapToTemp(_relativePath);
-        WriteableBitmap bmp;
-
-        try
-        {
-            if (File.Exists(fullPath))
-            {
-                using var fs = File.OpenRead(fullPath);
-                var src = new Bitmap(fs);
-
-                bmp = new WriteableBitmap(src.PixelSize, src.Dpi, PixelFormat.Bgra8888, AlphaFormat.Premul);
-
-                using var fb = bmp.Lock();
-                src.CopyPixels(new PixelRect(0, 0, src.PixelSize.Width, src.PixelSize.Height),
-                               fb.Address, fb.RowBytes * fb.Size.Height, fb.RowBytes);
-            }
-            else
-            {
-                bmp = new WriteableBitmap(new PixelSize(800, 600), new Vector(96, 96),
-                                          PixelFormat.Bgra8888, AlphaFormat.Premul);
-            }
-        }
-        catch
-        {
-            bmp = new WriteableBitmap(new PixelSize(800, 600), new Vector(96, 96),
-                                      PixelFormat.Bgra8888, AlphaFormat.Premul);
-        }
-
-        _layers.Add(new Layer
-        {
-            Name = "Base",
-            Visible = true,
-            Bitmap = bmp
-        });
-
-        pixelGrid.PixelWidth = bmp.PixelSize.Width;
-        pixelGrid.PixelHeight = bmp.PixelSize.Height;
-
-        CanvasImage.Source = CompositeLayers();
-    }
-
-    private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (_tool == ToolMode.Hand)
-            return;
-
-        _undoStack.Push(CloneLayerBitmaps());
-        _redoStack.Clear();
-
-        var point = ToBitmapSpace(e);
-
-        if (_tool == ToolMode.Bucket)
-        {
-            FloodFill((int)point.X, (int)point.Y, _currentColor);
-            CanvasImage.Source = CompositeLayers();
-            return;
-        }
-
-        _isDrawing = true;
-        _lastPoint = point;
-        DrawPoint(point);
-    }
-
-    private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        _isDrawing = false;
-    }
-
-    private void OnPointerMoved(object? sender, PointerEventArgs e)
-    {
-        if (!_isDrawing || _tool == ToolMode.Hand)
-            return;
-
-        var point = ToBitmapSpace(e);
-        DrawLine(_lastPoint, point);
-        _lastPoint = point;
-    }
-
-    private void DrawPoint(Avalonia.Point p)
-    {
-        var active = _layers[_activeLayerIndex].Bitmap;
-
-        using var fb = active.Lock();
-        int size = (int)BrushSizeSlider.Value;
-        uint color = _currentColor.ToUInt32();
-
-        unsafe
-        {
-            uint* ptr = (uint*)fb.Address;
-            int width = active.PixelSize.Width;
-            int height = active.PixelSize.Height;
-
-            for (int y = -size; y < size; y++)
-            {
-                for (int x = -size; x < size; x++)
-                {
-                    int px = (int)p.X + x;
-                    int py = (int)p.Y + y;
-
-                    if (px < 0 || py < 0 || px >= width || py >= height)
-                        continue;
-
-                    ptr[py * width + px] = color;
-                }
-            }
-        }
-
-        CanvasImage.Source = CompositeLayers();
-    }
-
-    private void DrawLine(Avalonia.Point a, Avalonia.Point b)
-    {
-        int steps = (int)Math.Max(Math.Abs(b.X - a.X), Math.Abs(b.Y - a.Y));
-
-        for (int i = 0; i < steps; i++)
-        {
-            double t = i / (double)steps;
-            DrawPoint(new Avalonia.Point(a.X + (b.X - a.X) * t,
-                                         a.Y + (b.Y - a.Y) * t));
-        }
-    }
-
-    private Avalonia.Point ToBitmapSpace(PointerEventArgs e)
-    {
-        var scroll = this.FindControl<ScrollViewer>("CanvasScroll");
-        var pos = e.GetPosition(scroll);
-
-        var transform = scroll.TransformToVisual(ZoomContainer);
-        var zoomSpace = transform?.Transform(pos) ?? pos;
-
-        double scale = ZoomSlider.Value;
-        return new Avalonia.Point(zoomSpace.X / scale, zoomSpace.Y / scale);
-    }
-
-    private unsafe void FloodFill(int x, int y, Color newColor)
-    {
-        var active = _layers[_activeLayerIndex].Bitmap;
-
-        using var fb = active.Lock();
-
-        int width = active.PixelSize.Width;
-        int height = active.PixelSize.Height;
-
-        uint* ptr = (uint*)fb.Address;
-        uint target = ptr[y * width + x];
-        uint replacement = newColor.ToUInt32();
-
-        if (target == replacement)
-            return;
-
-        Stack<(int X, int Y)> stack = new();
-        stack.Push((x, y));
-
-        while (stack.Count > 0)
-        {
-            var (px, py) = stack.Pop();
-
-            int left = px;
-            int right = px;
-
-            while (left >= 0 && ptr[py * width + left] == target) left--;
-            while (right < width && ptr[py * width + right] == target) right++;
-
-            for (int i = left + 1; i < right; i++)
-            {
-                ptr[py * width + i] = replacement;
-
-                if (py > 0 && ptr[(py - 1) * width + i] == target)
-                    stack.Push((i, py - 1));
-
-                if (py < height - 1 && ptr[(py + 1) * width + i] == target)
-                    stack.Push((i, py + 1));
-            }
-        }
-
-        CanvasImage.Source = CompositeLayers();
-    }
-
-    private WriteableBitmap CompositeLayers()
-    {
-        var baseLayer = _layers[0].Bitmap;
-        var result = new WriteableBitmap(baseLayer.PixelSize, baseLayer.Dpi,
-                                         PixelFormat.Bgra8888, AlphaFormat.Premul);
-
-        using var fb = result.Lock();
-
-        unsafe
-        {
-            uint* dst = (uint*)fb.Address;
-
-            foreach (var layer in _layers)
-            {
-                if (!layer.Visible) continue;
-
-                using var srcLock = layer.Bitmap.Lock();
-                uint* src = (uint*)srcLock.Address;
-
-                int count = layer.Bitmap.PixelSize.Width * layer.Bitmap.PixelSize.Height;
-
-                for (int i = 0; i < count; i++)
-                {
-                    uint pixel = src[i];
-                    if ((pixel >> 24) != 0)
-                        dst[i] = Blend(dst[i], pixel, layer.Opacity);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private List<WriteableBitmap> CloneLayerBitmaps()
-    {
-        var list = new List<WriteableBitmap>();
-        foreach (var layer in _layers)
-            list.Add(CloneBitmap(layer.Bitmap));
-        return list;
-    }
-
-    private WriteableBitmap CloneBitmap(WriteableBitmap source)
-    {
-        var clone = new WriteableBitmap(source.PixelSize, source.Dpi,
-                                        source.Format, source.AlphaFormat);
-
-        unsafe
-        {
-            using var src = source.Lock();
-            using var dst = clone.Lock();
-
-            Buffer.MemoryCopy(src.Address.ToPointer(),
-                              dst.Address.ToPointer(),
-                              dst.RowBytes * dst.Size.Height,
-                              src.RowBytes * src.Size.Height);
-        }
-
-        return clone;
-    }
-
-    private void Undo()
-    {
-        if (_undoStack.Count == 0)
-            return;
-
-        var prev = _undoStack.Pop();
-        _redoStack.Push(CloneLayerBitmaps());
-
-        for (int i = 0; i < _layers.Count; i++)
-            _layers[i].Bitmap = prev[i];
-
-        CanvasImage.Source = CompositeLayers();
-    }
-
-    private void Redo()
-    {
-        if (_redoStack.Count == 0)
-            return;
-
-        var next = _redoStack.Pop();
-        _undoStack.Push(CloneLayerBitmaps());
-
-        for (int i = 0; i < _layers.Count; i++)
-            _layers[i].Bitmap = next[i];
-
-        CanvasImage.Source = CompositeLayers();
-    }
-
-    private void Clear()
-    {
-        _undoStack.Push(CloneLayerBitmaps());
-        _redoStack.Clear();
-
-        var active = _layers[_activeLayerIndex].Bitmap;
-
-        using var fb = active.Lock();
-        unsafe
-        {
-            Buffer.MemoryCopy(
-                new byte[active.PixelSize.Width * active.PixelSize.Height * 4]
-                    .AsSpan().ToArray().AsMemory().Pin().Pointer,
-                fb.Address.ToPointer(),
-                fb.RowBytes * fb.Size.Height,
-                fb.RowBytes * fb.Size.Height);
-        }
-
-        CanvasImage.Source = CompositeLayers();
-    }
-
-    private void OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
-    {
-        if (!e.KeyModifiers.HasFlag(KeyModifiers.Control))
-            return;
-
-        var scroll = (ScrollViewer)sender;
-        var pos = e.GetPosition(scroll);
-
-        double oldZoom = ZoomSlider.Value;
-        double delta = e.Delta.Y > 0 ? 1.1 : 0.9;
-        double newZoom = Math.Clamp(oldZoom * delta, ZoomSlider.Minimum, ZoomSlider.Maximum);
-
-        ZoomSlider.Value = newZoom;
-
-        double factor = newZoom / oldZoom;
-
-        scroll.Offset = new Vector(
-            (scroll.Offset.X + pos.X) * factor - pos.X,
-            (scroll.Offset.Y + pos.Y) * factor - pos.Y
-        );
-
-        e.Handled = true;
-    }
-
-    private void OnScrollPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        var scroll = (ScrollViewer)sender;
-
-        if (e.GetCurrentPoint(scroll).Properties.IsMiddleButtonPressed || _isPanning)
-        {
-            _panStart = e.GetPosition(scroll);
-            _scrollStart = scroll.Offset;
-            scroll.Cursor = new Cursor(StandardCursorType.Hand);
-            e.Pointer.Capture(scroll);
-        }
-    }
-
-    private void OnScrollPointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        var scroll = (ScrollViewer)sender;
-        scroll.Cursor = Cursor.Default;
-        e.Pointer.Capture(null);
-    }
-
-    private void OnScrollPointerMoved(object? sender, PointerEventArgs e)
-    {
-        var scroll = (ScrollViewer)sender;
-
-        if (e.Pointer.Captured == scroll)
-        {
-            var pos = e.GetPosition(scroll);
-            var delta = pos - _panStart;
-
-            scroll.Offset = new Vector(
-                _scrollStart.X - delta.X,
-                _scrollStart.Y - delta.Y
-            );
-        }
-    }
-
-    private WriteableBitmap CreateThumbnail(WriteableBitmap source, int size = 64)
-    {
-        var thumb = new WriteableBitmap(new PixelSize(size, size), new Vector(96, 96),
-                                        PixelFormat.Bgra8888, AlphaFormat.Premul);
-
-        using var src = source.Lock();
-        using var dst = thumb.Lock();
-
-        unsafe
-        {
-            uint* srcPtr = (uint*)src.Address;
-            uint* dstPtr = (uint*)dst.Address;
-
-            int w = source.PixelSize.Width;
-            int h = source.PixelSize.Height;
-
-            for (int y = 0; y < size; y++)
-            {
-                int sy = y * h / size;
-                for (int x = 0; x < size; x++)
-                {
-                    int sx = x * w / size;
-                    dstPtr[y * size + x] = srcPtr[sy * w + sx];
-                }
-            }
-        }
-
-        return thumb;
-    }
-
-    uint Blend(uint dst, uint src, double opacity)
-    {
-        byte sa = (byte)(src >> 24);
-        byte sr = (byte)(src >> 16);
-        byte sg = (byte)(src >> 8);
-        byte sb = (byte)(src);
-
-        sa = (byte)(sa * opacity);
-
-        if (sa == 0) return dst;
-
-        return (uint)(sa << 24 | sr << 16 | sg << 8 | sb);
-    }
-}
+﻿Severity	Code	Description	Project	File	Line	Suppression State	Details
+Error (active)	AVLN2000	Unable to resolve suitable regular or attached property Triggers on type Avalonia.Markup.Xaml:Avalonia.Markup.Xaml.Templates.ControlTemplate Line 16, position 4.	PaintPower	C:\Users\ninoe\Documents\PaintPower\PaintPower\App.axaml	16		
+
+Severity	Code	Description	Project	File	Line	Suppression State	Details
+Error (active)	AVLN2000	Unable to resolve suitable regular or attached property ShadowDepth on type Avalonia.Base:Avalonia.Media.DropShadowEffect Line 24, position 7.	PaintPower	C:\Users\ninoe\Documents\PaintPower\PaintPower\App.axaml	24		
+Severity	Code	Description	Project	File	Line	Suppression State	Details
+Error (active)	AVLN2000	Unable to resolve type Trigger from namespace https://github.com/avaloniaui Line 36, position 6.	PaintPower	C:\Users\ninoe\Documents\PaintPower\PaintPower\App.axaml	36		
+
+Severity	Code	Description	Project	File	Line	Suppression State	Details
+Error (active)	AVLN2000	Unable to resolve suitable regular or attached property Value on type :.{Unknown type} Line 36, position 6.	PaintPower	C:\Users\ninoe\Documents\PaintPower\PaintPower\App.axaml	36		
+
+Severity	Code	Description	Project	File	Line	Suppression State	Details
+Error (active)	AVLN2000	Internal compiler error: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index (ResolveContentPropertyTransformer) Line 36, position 6.	PaintPower	C:\Users\ninoe\Documents\PaintPower\PaintPower\App.axaml	36		
+
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PaintPower.App"
+             RequestedThemeVariant="Default">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.Styles>
+		<FluentTheme Mode="Light" />
+		<ClassicTheme />
+		<StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" /> <!-- <- Important -->
+		<Style Selector="*">
+			<Setter Property="Transitions" Value="{x:Null}"/>
+		</Style>
+
+		<!-- Base 3D button template -->
+		<ControlTemplate x:Key="ThreeDButtonTemplate" TargetType="Button">
+			<Border x:Name="border"
+					Background="{TemplateBinding Background}"
+					BorderBrush="#444"
+					BorderThickness="1"
+					CornerRadius="6"
+					Padding="{TemplateBinding Padding}">
+				<Border.Effect>
+					<DropShadowEffect BlurRadius="4"
+									  ShadowDepth="1"
+									  Color="#00000040"/>
+				</Border.Effect>
+
+				<ContentPresenter HorizontalAlignment="Center"
+								  VerticalAlignment="Center"
+								  Foreground="{TemplateBinding Foreground}"/>
+			</Border>
+
+			<ControlTemplate.Triggers>
+				<!-- Pressed -->
+				<Trigger Property="IsPressed" Value="True">
+					<Setter TargetName="border" Property="Background" Value="{TemplateBinding Tag}"/>
+				</Trigger>
+
+				<!-- Disabled -->
+				<Trigger Property="IsEnabled" Value="False">
+					<Setter TargetName="border" Property="Opacity" Value="0.5"/>
+				</Trigger>
+			</ControlTemplate.Triggers>
+		</ControlTemplate>
+
+		<Style x:Key="GrayButton" Selector="Button.gray">
+			<Setter Property="Template" Value="{StaticResource ThreeDButtonTemplate}"/>
+			<Setter Property="Background" Value="#d0d0d0"/>
+			<Setter Property="Foreground" Value="Black"/>
+			<Setter Property="Padding" Value="6"/>
+			<Setter Property="Tag" Value="#b0b0b0"/>
+			<!-- pressed color -->
+		</Style>
+
+		<Style x:Key="WhiteButton" Selector="Button.white">
+			<Setter Property="Template" Value="{StaticResource ThreeDButtonTemplate}"/>
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="Foreground" Value="Black"/>
+			<Setter Property="Padding" Value="6"/>
+			<Setter Property="Tag" Value="#cce6ff"/>
+			<!-- pressed light blue -->
+		</Style>
+
+		<Style Selector="Window, UserControl">
+			<Setter Property="Background" Value="#e0e0e0"/>
+		</Style>
+	</Application.Styles>
+</Application>

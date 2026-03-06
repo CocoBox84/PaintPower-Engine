@@ -17,9 +17,9 @@
 						   Foreground="White"
 						   Margin="0 0 0 10"/>
 
-				<Button Content="Play" Margin="0 5"/>
-				<Button Content="Stop" Margin="0 5"/>
-				<Button Content="Build and Run" Margin="0 5"/>
+				<Button Classes="gray" Content="Play" Margin="0 5"/>
+				<Button Classes="gray" Content="Stop" Margin="0 5"/>
+				<Button Classes="gray" Content="Build and Run" Margin="0 5"/>
 			</StackPanel>
 		</Border>
 	</Grid>

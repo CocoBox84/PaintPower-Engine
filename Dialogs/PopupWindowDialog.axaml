@@ -6,6 +6,6 @@
 
     <StackPanel Margin="10" Spacing="10">
 		<TextBlock x:Name="PromptText"/>
-        <Button Content="Ok" Click="OnOk"/>
+		<Button Classes="white" Content="Ok" Click="OnOk"/>
     </StackPanel>
 </Window>

@@ -3,7 +3,7 @@
 using PaintPower.ProjectSystem;
 using Avalonia.Controls;
 
-public class AnimationEditor : UserControl
+public class AnimationEditor : EditorBase
 {
     public AnimationEditor(string path, TempWorkspace _workspace)
     {

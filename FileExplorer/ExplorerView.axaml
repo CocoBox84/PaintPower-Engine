@@ -8,10 +8,10 @@
 
 		<!-- Toolbar -->
 		<StackPanel Orientation="Horizontal" Spacing="6">
-			<Button Content="New" Click="OnNewFile"/>
-			<Button Content="New Folder" Click="OnNewFolder"/>
-			<Button Content="/" Click="OnGoRoot"/>
-			<Button Content=".." Click="OnGoUp"/>
+			<Button Classes="white" Content="New" Click="OnNewFile"/>
+			<Button Classes="white" Content="New Folder" Click="OnNewFolder"/>
+			<Button Classes="white" Content="/" Click="OnGoRoot"/>
+			<Button Classes="white" Content=".." Click="OnGoUp"/>
 		</StackPanel>
 
 		<!-- Current Path -->

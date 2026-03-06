@@ -41,17 +41,13 @@ public class PixelGrid : Control
         double step = Zoom; // 1 pixel = Zoom units
 
         var minorPen = new Pen(Brushes.Gray, 1);
-        var majorPen = new Pen(Brushes.White, 1.5); // thicker, brighter
+        var majorPen = new Pen(Brushes.White, 1); // thicker, brighter
 
         // Vertical lines
         for (int x = 0; x <= PixelWidth; x++)
         {
             double px = x * step;
-
-            if (x % 16 == 0)
-                context.DrawLine(majorPen, new Point(px, 0), new Point(px, PixelHeight * step));
-            else
-                context.DrawLine(minorPen, new Point(px, 0), new Point(px, PixelHeight * step));
+            context.DrawLine(minorPen, new Point(px, 0), new Point(px, PixelHeight * step));
         }
 
         // Horizontal lines
@@ -59,10 +55,7 @@ public class PixelGrid : Control
         {
             double py = y * step;
 
-            if (y % 16 == 0)
-                context.DrawLine(majorPen, new Point(0, py), new Point(PixelWidth * step, py));
-            else
-                context.DrawLine(minorPen, new Point(0, py), new Point(PixelWidth * step, py));
+            context.DrawLine(minorPen, new Point(0, py), new Point(PixelWidth * step, py));
         }
     }
 }

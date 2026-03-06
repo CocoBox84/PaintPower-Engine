@@ -11,10 +11,10 @@
                    FontSize="18"
                    HorizontalAlignment="Center"/>
 
-        <Button Content="Create New Project"
+		<Button Classes="white" Content="Create New Project"
                 Click="OnNewProject"/>
 
-        <Button Content="Open Existing Project"
+		<Button Classes="gray" Content="Open Existing Project"
                 Click="OnOpenProject"/>
 
     </StackPanel>

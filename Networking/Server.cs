@@ -60,7 +60,11 @@ public class Server
         AllowDomain(d11); AllowDomain(d12); AllowDomain(d13); AllowDomain(d14); AllowDomain(d15);
         AllowDomain(d16); AllowDomain(d17); AllowDomain(d18); AllowDomain(d19); AllowDomain(d20);
 
+        #if DEBUG
         setActiveDomain(d3);
+        #else
+        setActiveDomain(d16);
+        #endif
     }
 
     public void setActiveDomain(Domain domain)
