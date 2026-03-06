@@ -1,14 +1,16 @@
 using Avalonia.Controls;
-using PaintPower.Editors;
-using PaintPower.ProjectSystem;
-using PaintPower.FileExplorer;
+using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using PaintPower.Dialogs;
+using PaintPower.Editors;
+using PaintPower.FileExplorer;
+using PaintPower.Logging;
+using PaintPower.Networking;
+using PaintPower.ProjectSystem;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using PaintPower.Networking;
-using PaintPower.Logging;
-using System.Diagnostics;
 namespace PaintPower;
 
 public partial class MainWindow : Window
@@ -26,6 +28,7 @@ public partial class MainWindow : Window
         _editorManager = new Editor(_project.Workspace);
         server = new Server();
         SaveButton.Click += (_, __) => Save();
+        SaveAsButton.Click += (_, __) => SaveAs();
     }
 
     protected override async void OnOpened(EventArgs e)
@@ -39,7 +42,7 @@ public partial class MainWindow : Window
         if (result == null) { Close(); return; }
 
         if (result.Mode == ProjectLoaderMode.New)
-            _project.CreateNew(result.Path, "New Project");
+            _project.CreateNew(result.Path, Path.GetFileNameWithoutExtension(result.Path));
         else
             _project.Load(result.Path);
 
@@ -73,7 +76,9 @@ public partial class MainWindow : Window
         _editor = null;
     }
 
-    async public void Save() {
+    // Save function. Don't even care about what it returns, but C#
+    // Requires it in order to await it. C# core.
+    async public Task Save() {
         try
         {
             var doSave = false;
@@ -94,9 +99,41 @@ public partial class MainWindow : Window
             ProjectSaver.Save(_project, _editor);
             Log.QuickLog("Project Saved!");
         } catch(Exception ex) { Log.QuickLog($"Error while saving project! {ex.ToString()}"); };
+        return;
     }
 
-    async public void SaveAs() { }
+    async public void SaveAs()
+    {
+        var savePicker = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = $"Save {_project.Metadata.name} As",
+            DefaultExtension = "xPaint",
+            SuggestedFileName = $"{_project.Metadata.name}.xPaint",
+            ShowOverwritePrompt = true
+        });
+
+        if (savePicker == null)
+            return;
+
+        // Convert IStorageFile to a real path
+        string newPath = savePicker.Path.LocalPath;
+
+        // Update project path
+        _project.ProjectPath = newPath;
+
+        // Save the project to the new location
+        try
+        {
+            ProjectSaver.Save(_project, _editor);
+            _project.Metadata.name = Path.GetFileNameWithoutExtension(newPath);
+            Title = $"PaintPower - {_project.Metadata.name}";
+            Log.QuickLog($"Project saved as {newPath}");
+        }
+        catch (Exception ex)
+        {
+            Log.QuickLog($"SaveAs failed: {ex}");
+        }
+    }
 
     public void SaveToServer()
     {

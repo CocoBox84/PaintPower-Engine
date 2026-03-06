@@ -19,7 +19,7 @@ public class Server
 
     public void RemoveDomain(Domain domain) { AllowedDomainsList.Remove(domain); }
 
-    public Domain CurrentDomain = new Domain("paint-website.onrender.com");
+    public Domain CurrentDomain = new Domain("www.cocoink.ink");
 
     public void closeAllConnections() {
         AllowedDomainsList.Clear();

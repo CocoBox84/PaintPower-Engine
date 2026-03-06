@@ -7,7 +7,7 @@ namespace PaintPower.ProjectSystem;
 
 public class PaintProject
 {
-    public string ProjectPath { get; private set; } = "";
+    public string ProjectPath { get; set; } = "";
     public TempWorkspace Workspace { get; }
     public ProjectMetadata Metadata { get; private set; }
 
@@ -41,6 +41,8 @@ public class PaintProject
     public void Load(string projectPath)
     {
         ProjectPath = projectPath;
+
+        if (Directory.Exists(Workspace.Root)) { }
 
         // Extract ZIP into temp workspace
         ZipFile.ExtractToDirectory(projectPath, Workspace.Root, overwriteFiles: true);

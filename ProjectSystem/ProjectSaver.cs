@@ -18,8 +18,12 @@ class ProjectSaver {
         if (project != null) project.SaveToDisk(); // Make zip from temp
     }
 
-    public static void PublishToServer(PaintProject project, EditorBase editor, Server server)
+    async public static void PublishToServer(PaintProject project, EditorBase editor, Server server)
     {
-        Save(project, editor);
+        await new MainWindow().Save();
+        if (server.checkConnection() && project != null)
+        {
+            server.uploadProject(project);
+        }
     }
 }
