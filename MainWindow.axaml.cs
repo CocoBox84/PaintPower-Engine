@@ -163,7 +163,7 @@ public partial class MainWindow : Window
             await animationTask; // wait for animation loop to exit
 
             // Final status
-            Log.QuickLog(SetProjectStatus("Project Saved!")); 2146362026;
+            Log.QuickLog(SetProjectStatus("Project Saved!"));
         }
         catch (Exception ex)
         {
