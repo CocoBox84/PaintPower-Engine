@@ -116,6 +116,12 @@ public partial class PaintEditor : EditorBase
 
         using var fs = File.Open(fullPath, FileMode.Create);
         _bitmap.Save(fs);
+
+        if (!MainWindow.App.saveNeeded)
+        {
+            MainWindow.App.SetProjectStatus("Save Project");
+            MainWindow.App.saveNeeded = true;
+        }
     }
 
     private void LoadOrCreateImage()
@@ -158,6 +164,12 @@ public partial class PaintEditor : EditorBase
         if (_tool == ToolMode.Hand)
             return;
 
+        if (!MainWindow.App.saveNeeded)
+        {
+            MainWindow.App.SetProjectStatus("Save Project");
+            MainWindow.App.saveNeeded = true;
+        }
+
         _undoStack.Push(CloneBitmap(_bitmap));
         _redoStack.Clear();
 
@@ -197,6 +209,12 @@ public partial class PaintEditor : EditorBase
 
         if (!_isDrawing || _tool == ToolMode.Hand)
             return;
+
+        if (!MainWindow.App.saveNeeded)
+        {
+            MainWindow.App.SetProjectStatus("Save Project");
+            MainWindow.App.saveNeeded = true;
+        }
 
         var point = ToBitmapSpace(e);
         DrawLine(_lastPoint, point);
@@ -329,6 +347,12 @@ public partial class PaintEditor : EditorBase
         if (_undoStack.Count == 0)
             return;
 
+        if (!MainWindow.App.saveNeeded)
+        {
+            MainWindow.App.SetProjectStatus("Save Project");
+            MainWindow.App.saveNeeded = true;
+        }
+
         _redoStack.Push(CloneBitmap(_bitmap));
         _bitmap = _undoStack.Pop();
 
@@ -340,6 +364,12 @@ public partial class PaintEditor : EditorBase
     {
         if (_redoStack.Count == 0)
             return;
+
+        if (!MainWindow.App.saveNeeded)
+        {
+            MainWindow.App.SetProjectStatus("Save Project");
+            MainWindow.App.saveNeeded = true;
+        }
 
         _undoStack.Push(CloneBitmap(_bitmap));
         _bitmap = _redoStack.Pop();
@@ -362,6 +392,12 @@ public partial class PaintEditor : EditorBase
                 fb.Address.ToPointer(),
                 fb.RowBytes * fb.Size.Height,
                 fb.RowBytes * fb.Size.Height);
+        }
+
+        if (!MainWindow.App.saveNeeded)
+        {
+            MainWindow.App.SetProjectStatus("Save Project");
+            MainWindow.App.saveNeeded = true;
         }
 
         CanvasImage.InvalidateVisual();
@@ -401,6 +437,12 @@ public partial class PaintEditor : EditorBase
             _scrollStart = scroll.Offset;
             scroll.Cursor = new Cursor(StandardCursorType.Hand);
             e.Pointer.Capture(scroll);
+        }
+
+        if (!MainWindow.App.saveNeeded)
+        {
+            MainWindow.App.SetProjectStatus("Save Project");
+            MainWindow.App.saveNeeded = true;
         }
     }
 

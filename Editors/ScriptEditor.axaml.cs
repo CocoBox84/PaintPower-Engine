@@ -39,13 +39,18 @@ public partial class ScriptEditor : EditorBase
         }
 
         // Syntax highlighting based on extension
-            var ext = Path.GetExtension(relativePath);
+        var ext = Path.GetExtension(relativePath);
         editor.SyntaxHighlighting =
             HighlightingManager.Instance.GetDefinitionByExtension(ext)
             ?? HighlightingManager.Instance.GetDefinition("C#");
 
         // Autosave on change
-        editor.TextChanged += (_, __) => Save();
+        editor.TextChanged += (_, __) =>
+        {
+            MainWindow.App.SetProjectStatus("Save Project");
+            MainWindow.App.saveNeeded = true;
+            Save();
+        };
     }
 
     override public void Save()

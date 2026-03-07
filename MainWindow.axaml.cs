@@ -10,6 +10,7 @@ using PaintPower.ProjectSystem;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 namespace PaintPower;
 
@@ -20,6 +21,10 @@ public partial class MainWindow : Window
     private EditorBase _editor;
     public Server server;
 
+    public bool saveNeeded = false;
+
+    public static MainWindow App { get; private set; }
+
     public MainWindow()
     {
         InitializeComponent();
@@ -29,6 +34,25 @@ public partial class MainWindow : Window
         server = new Server();
         SaveButton.Click += (_, __) => Save();
         SaveAsButton.Click += (_, __) => SaveAs();
+        ProjectStatus.PointerPressed += StatusClicked;
+
+        // After, make a static reference.
+        App = this;
+    }
+
+    void StatusClicked(object sender, EventArgs e)
+    {
+        if (_project != null && saveNeeded)
+        {
+            Save();
+        }
+    }
+
+    public string SetProjectStatus(string status)
+    {
+        ProjectStatus.Text = status;
+        this.InvalidateVisual();
+        return status;
     }
 
     protected override async void OnOpened(EventArgs e)
@@ -76,30 +100,77 @@ public partial class MainWindow : Window
         _editor = null;
     }
 
+    private bool _isSavingAnimationRunning = false;
+
+    private async Task RunSavingAnimation()
+    {
+        _isSavingAnimationRunning = true;
+
+        string[] frames = new[]
+        {
+        "Saving Project",
+        "Saving Project.",
+        "Saving Project..",
+        "Saving Project..."
+    };
+
+        int index = 0;
+
+        while (_isSavingAnimationRunning)
+        {
+            SetProjectStatus(frames[index]);
+            index = (index + 1) % frames.Length;
+            await Task.Delay(300); // smooth animation
+        }
+    }
+
     // Save function. Don't even care about what it returns, but C#
     // Requires it in order to await it. C# core.
-    async public Task Save() {
+    async public Task Save()
+    {
+        if (!saveNeeded) return;
+
         try
         {
-            var doSave = false;
-            var result = "";
-            try
+            var dialog = new DoSaveWindowDialog();
+            var result = await dialog.ShowAsync(this);
+
+            if (result == "saveas")
             {
-                result = await new DoSaveWindowDialog().ShowAsync(this);
+                SaveAs();
+                return;
             }
-            catch (Exception ex) { Log.QuickLog($"Error with dialog. {ex.ToString()}"); };
-            ;
-            doSave = result == "save";
-            if (result == "saveas") SaveAs();
-            if (!doSave) {
-                Log.QuickLog($"Not saving. {result} {doSave}");
-                return; 
+
+            if (result != "save")
+            {
+                Log.QuickLog($"Not saving. {result}");
+                return;
             }
+
             Log.QuickLog("Saving Project...");
-            ProjectSaver.Save(_project, _editor);
+
+            // Start animation (non-blocking)
+            var animationTask = RunSavingAnimation();
+
+            // Run save off UI thread
+            await Task.Run(() =>
+            {
+                ProjectSaver.Save(_project, _editor);
+            });
+
+            // Stop animation
+            _isSavingAnimationRunning = false;
+            await animationTask; // wait for animation loop to exit
+
+            // Final status
+            Log.QuickLog(SetProjectStatus("Project Saved!"));
+            saveNeeded = false;
             Log.QuickLog("Project Saved!");
-        } catch(Exception ex) { Log.QuickLog($"Error while saving project! {ex.ToString()}"); };
-        return;
+        }
+        catch (Exception ex)
+        {
+            Log.QuickLog($"Error while saving project! {ex}");
+        }
     }
 
     async public void SaveAs()

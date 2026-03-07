@@ -11,7 +11,7 @@ public class PaintProject
     public TempWorkspace Workspace { get; }
     public ProjectMetadata Metadata { get; private set; }
 
-    public string ProjectName { get; private set; }
+    public string ProjectName { get; private set; } = string.Empty;
 
     public PaintProject()
     {

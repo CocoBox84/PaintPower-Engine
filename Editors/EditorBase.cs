@@ -15,4 +15,6 @@ public partial class EditorBase : UserControl
         Content = t;
         return this;
     }
+
+    public string type = "";
 }

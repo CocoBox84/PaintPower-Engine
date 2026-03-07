@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
+using PaintPower.ProjectSystem;
 
 namespace PaintPower.Networking;
 
@@ -19,7 +20,7 @@ public class Server
 
     public void RemoveDomain(Domain domain) { AllowedDomainsList.Remove(domain); }
 
-    public Domain CurrentDomain = new Domain("www.cocoink.ink");
+    public Domain CurrentDomain = new Domain("www.cocoink.ink/f/PaintPower");
 
     public void closeAllConnections() {
         AllowedDomainsList.Clear();
@@ -47,10 +48,10 @@ public class Server
         Domain d12 = new Domain("render.com");
         Domain d13 = new Domain("paint-website.onrender.com");
         Domain d14 = new Domain("paintpower.cocoink.ink");
-        Domain d15 = new Domain("cocoink.ink");
-        Domain d16 = new Domain("cocoink.ink/f/xPaint");
-        Domain d17 = new Domain("cocoink.ink/f/Paint");
-        Domain d18 = new Domain("cocoink.ink/f/PaintPower");
+        Domain d15 = new Domain("www.cocoink.ink");
+        Domain d16 = new Domain("www.cocoink.ink/f/xPaint");
+        Domain d17 = new Domain("www.cocoink.ink/f/Paint");
+        Domain d18 = new Domain("www.cocoink.ink/f/PaintPower");
         Domain d19 = new Domain("negro.org");
         Domain d20 = new Domain("example.com");
 
@@ -81,13 +82,15 @@ public class Server
 
     public bool checkConnection() { return true; }
 
-    public async Task<string> GetFromServer()
+    public async Task<object> GetFromServer()
     {
         var domain = CurrentDomain;
         if (domain == null) throw new ArgumentNullException(nameof(domain));
         if (!IsDomainAllowed(domain)) throw new UnauthorizedAccessException("Domain not allowed");
         return await Net.PerformGetRequest(URLifyer.URLify(domain));
     }
+
+    public async Task UploadProject(PaintProject project) { }
 
     public Server() {
     }
