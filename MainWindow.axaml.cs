@@ -163,9 +163,7 @@ public partial class MainWindow : Window
             await animationTask; // wait for animation loop to exit
 
             // Final status
-            Log.QuickLog(SetProjectStatus("Project Saved!"));
-            saveNeeded = false;
-            Log.QuickLog("Project Saved!");
+            Log.QuickLog(SetProjectStatus("Project Saved!")); 2146362026;
         }
         catch (Exception ex)
         {
@@ -186,18 +184,30 @@ public partial class MainWindow : Window
         if (savePicker == null)
             return;
 
-        // Convert IStorageFile to a real path
         string newPath = savePicker.Path.LocalPath;
 
         // Update project path
         _project.ProjectPath = newPath;
 
-        // Save the project to the new location
         try
         {
-            ProjectSaver.Save(_project, _editor);
+            // Start animation
+            var animationTask = RunSavingAnimation();
+
+            // Run save off UI thread
+            await Task.Run(() =>
+            {
+                ProjectSaver.Save(_project, _editor);
+            });
+
+            // Stop animation
+            _isSavingAnimationRunning = false;
+            await animationTask;
+
+            // Update metadata + UI
             _project.Metadata.name = Path.GetFileNameWithoutExtension(newPath);
             Title = $"PaintPower - {_project.Metadata.name}";
+            SetProjectStatus("Project Saved!");
             Log.QuickLog($"Project saved as {newPath}");
         }
         catch (Exception ex)
