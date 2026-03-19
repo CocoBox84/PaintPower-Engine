@@ -19,7 +19,7 @@
 
 							<!-- Inner highlight -->
 							<Border BorderThickness="0,1,0,0"
-									BorderBrush="White"
+									BorderBrush="#f1eebd"
 									Margin="2"
 									Opacity="0.7"
 									CornerRadius="{Binding ElementName=button, Path=CornerRadius}"/>
@@ -67,8 +67,8 @@
 			<Setter Property="Background">
 				<Setter.Value>
 					<LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-						<GradientStop Color="#D0D0D0" Offset="0"/>
-						<GradientStop Color="#E8E8E8" Offset="1"/>
+						<GradientStop Color="Blue" Offset="0"/>
+						<GradientStop Color="White" Offset="1"/>
 					</LinearGradientBrush>
 				</Setter.Value>
 			</Setter>
@@ -86,7 +86,7 @@
 		</Style>
 
 		<Style Selector="Button.white">
-			<Setter Property="Background" Value="#FFFFFF"/>
+			<Setter Property="Background" Value="#E0E0E0"/>
 			<Setter Property="Foreground" Value="Black"/>
 		</Style>
 
@@ -96,11 +96,11 @@
 		</Style>
 
 		<Style Selector="Button.gray">
-			<Setter Property="Background" Value="#D0D0D0"/>
+			<Setter Property="Background" Value="#949385"/>
 		</Style>
 
 		<Style Selector="Button.gray:pressed">
-			<Setter Property="Background" Value="#E0E0E0"/>
+			<Setter Property="Background" Value="#D0D0D0"/>
 		</Style>
 
 		<Style Selector="Window, UserControl">

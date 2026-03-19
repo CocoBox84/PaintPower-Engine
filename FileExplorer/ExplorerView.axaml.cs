@@ -113,6 +113,8 @@ public partial class ExplorerView : UserControl
         if (!Directory.Exists(path) && !File.Exists(path))
             File.WriteAllText(path, "");
 
+        MainWindow.App.SetProjectStatus("Save Project");
+        MainWindow.App.saveNeeded = true;
         Refresh();
     }
 
@@ -135,7 +137,10 @@ public partial class ExplorerView : UserControl
             ShowErrorPopup();
         }
 
-            Refresh();
+        MainWindow.App.SetProjectStatus("Save Project");
+        MainWindow.App.saveNeeded = true;
+
+        Refresh();
     }
 
     private async Task ShowErrorPopup() {

@@ -64,6 +64,7 @@
 		<!-- MAIN CONTENT -->
 		<Grid Grid.Row="1" ColumnDefinitions="260,5,*,5,340">
 
+			<!-- BACKGROUND -->
 			<Grid.Background>
 				<ImageBrush Source="avares://PaintPower/Assets/Background.png"
 							Stretch="None"
@@ -73,34 +74,61 @@
 							DestinationRect="0,0,10,10" />
 			</Grid.Background>
 
-			<!-- LEFT: File Explorer -->
-			<explorer:ExplorerView x:Name="Explorer" Grid.Column="0"/>
+			<!-- OUTER LEFT: Sprite Manager + Sprite Properties -->
+			<Grid Grid.Column="0" RowDefinitions="*,*">
+				<!-- SPRITE MANAGER -->
+				<Border Background="#303030" Margin="0,0,0,5">
+					<TextBlock Text="Sprite Manager"
+							   Foreground="White"
+							   Margin="8"/>
+					<!-- TODO: Replace with your SpriteManager control -->
+				</Border>
 
-			<!-- LEFT SPLITTER -->
+				<!-- SPRITE PROPERTIES -->
+				<Border Background="#252525">
+					<TextBlock Text="Sprite Properties"
+							   Foreground="White"
+							   Margin="8"/>
+					<!-- TODO: Replace with your SpriteProperties control -->
+				</Border>
+			</Grid>
+
+			<!-- SPLITTER between LEFT and CENTER -->
 			<GridSplitter Grid.Column="1"
 						  Width="5"
 						  Background="#505050"
-						  HorizontalAlignment="Stretch"
-						  VerticalAlignment="Stretch"
 						  ResizeDirection="Columns"
-						  ResizeBehavior="PreviousAndNext" />
+						  ResizeBehavior="PreviousAndNext"/>
 
-			<!-- CENTER: Editor Host -->
-			<ContentControl x:Name="EditorHost"
-							Grid.Column="2"
-							HorizontalAlignment="Stretch"
-							VerticalAlignment="Stretch"/>
+			<!-- OUTER CENTER: Sprite Editor Panel -->
+			<Grid Grid.Column="2" ColumnDefinitions="260,5,*">
 
-			<!-- RIGHT SPLITTER -->
+				<!-- INNER LEFT: Explorer -->
+				<explorer:ExplorerView x:Name="Explorer"
+									   Grid.Column="0"/>
+
+				<!-- INNER SPLITTER -->
+				<GridSplitter Grid.Column="1"
+							  Width="5"
+							  Background="#505050"
+							  ResizeDirection="Columns"
+							  ResizeBehavior="PreviousAndNext"/>
+
+				<!-- INNER RIGHT: Editor Host -->
+				<ContentControl x:Name="EditorHost"
+								Grid.Column="2"
+								HorizontalAlignment="Stretch"
+								VerticalAlignment="Stretch"/>
+			</Grid>
+
+			<!-- SPLITTER between CENTER and RIGHT -->
 			<GridSplitter Grid.Column="3"
 						  Width="5"
 						  Background="#505050"
-						  HorizontalAlignment="Stretch"
-						  VerticalAlignment="Stretch"
 						  ResizeDirection="Columns"
-						  ResizeBehavior="PreviousAndNext" />
+						  ResizeBehavior="PreviousAndNext"/>
 
-			<!-- RIGHT: VM Panel -->
+			<!-- OUTER RIGHT: VM Panel -->
 			<vm:VmPanel Grid.Column="4"/>
 
 		</Grid>

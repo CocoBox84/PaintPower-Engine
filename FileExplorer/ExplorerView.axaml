@@ -18,7 +18,8 @@
 		<TextBlock x:Name="PathLabel"
                    Grid.Row="1"
                    FontSize="14"
-                   Margin="4"/>
+                   Margin="4"
+				   Foreground="White"/>
 
 		<!-- File List -->
 		<Border Background="#20202020" Grid.Row="2">
