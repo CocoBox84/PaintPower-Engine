@@ -90,8 +90,31 @@ public class Server
         return await Net.PerformGetRequest(URLifyer.URLify(domain));
     }
 
-    public async Task UploadProject(PaintProject project) { }
+    public async Task DownloadProject(string savePath)
+    {
+        string url = URLifyer.URLify(CurrentDomain);
+        await Net.DownloadFileAsync(url, savePath);
+    }
+
+    public async Task UploadProject(PaintProject project)
+    {
+        MainWindow.App.RunSavingAnimation(); // new helper
+
+        try
+        {
+            await Net.UploadFileAsync(
+                 $"{URLifyer.URLify(CurrentDomain)}api/upload/projects/1/",
+                 project.ProjectPath,
+                 project.Metadata.name // send project title
+             );
+        }
+        finally
+        {
+            MainWindow.App._isSavingAnimationRunning = false;   
+        }
+    }
 
     public Server() {
+        InitServer();
     }
 }

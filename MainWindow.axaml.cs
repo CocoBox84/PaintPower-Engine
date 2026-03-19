@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
         _project = new PaintProject();
         _editorManager = new Editor(_project.Workspace);
@@ -35,6 +36,7 @@ public partial class MainWindow : Window
         SaveButton.Click += (_, __) => Save();
         SaveAsButton.Click += (_, __) => SaveAs();
         ProjectStatus.PointerPressed += StatusClicked;
+        UploadProjectButton.Click += (_, __) => SaveToServer();
 
         // After, make a static reference.
         App = this;
@@ -67,12 +69,14 @@ public partial class MainWindow : Window
 
         if (result.Mode == ProjectLoaderMode.New)
             _project.CreateNew(result.Path, Path.GetFileNameWithoutExtension(result.Path));
-        else
+        else // if (result.Mode == ProjectLoaderMode.Open) 
             _project.Load(result.Path);
 
-        Title = $"PaintPower - {_project.Metadata.name}";
+            Title = $"PaintPower - {_project.Metadata.name}";
 
         Explorer.Initialize(_project.Workspace);
+
+        SetProjectStatus("Not edited yet.");
 
         if (!string.IsNullOrWhiteSpace(_project.Metadata.OpenFile))
         {
@@ -100,9 +104,10 @@ public partial class MainWindow : Window
         _editor = null;
     }
 
-    private bool _isSavingAnimationRunning = false;
+    public bool _isSavingAnimationRunning = false;
+    public bool _isUploadAnimationRunning = false;
 
-    private async Task RunSavingAnimation()
+    public async Task RunSavingAnimation()
     {
         _isSavingAnimationRunning = true;
 
@@ -216,10 +221,13 @@ public partial class MainWindow : Window
         }
     }
 
-    public void SaveToServer()
+    public async void SaveToServer()
     {
         var doSave = false;
         if (!doSave) return;
+        SetProjectStatus("Uploading Project to Server...");
+        MainWindow.App.InvalidateVisual();
         ProjectSaver.PublishToServer(_project, _editor, server);
+        SetProjectStatus("");
     }
 }

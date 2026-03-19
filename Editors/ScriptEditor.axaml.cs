@@ -2,6 +2,8 @@
 using Avalonia.Markup.Xaml;
 using AvaloniaEdit;
 using AvaloniaEdit.Highlighting;
+using AvaloniaEdit.TextMate;
+using TextMateSharp.Grammars;
 using PaintPower.ProjectSystem;
 using System;
 using System.Diagnostics;
@@ -13,6 +15,8 @@ public partial class ScriptEditor : EditorBase
 {
     private readonly string _relativePath;
     private readonly TempWorkspace _workspace;
+    private TextMate.Installation _textMateInstallation;
+    private RegistryOptions _registryOptions;
 
     public ScriptEditor(string relativePath, TempWorkspace workspace)
     {
@@ -26,25 +30,36 @@ public partial class ScriptEditor : EditorBase
 
         if (editor != null)
         {
-
-            // Load file text
             editor.Text = _workspace.LoadText(relativePath);
-            Debug.WriteLine(editor.Text);
             editor.Focus();
-
-            Debug.WriteLine($"Loading script: {relativePath}");
-        }
-        else {
-            Debug.WriteLine("Editor is null.");
         }
 
-        // Syntax highlighting based on extension
+        // 1. Create registry options with a theme
+        _registryOptions = new RegistryOptions(ThemeName.LightPlus);
+
+        // 2. Install TextMate
+        _textMateInstallation = editor.InstallTextMate(_registryOptions);
+
+        // 3. Set theme
+        _textMateInstallation.SetTheme(_registryOptions.LoadTheme(ThemeName.DarkPlus));
+
+        // 4. Set grammar based on file extension
         var ext = Path.GetExtension(relativePath);
-        editor.SyntaxHighlighting =
-            HighlightingManager.Instance.GetDefinitionByExtension(ext)
-            ?? HighlightingManager.Instance.GetDefinition("C#");
+        var scope = _registryOptions.GetScopeByExtension(ext);
 
-        // Autosave on change
+        if (scope != null)
+        {
+            _textMateInstallation.SetGrammar(scope);
+        }
+        else
+        {
+            Debug.WriteLine($"No TextMate grammar found for extension: {ext}");
+        }
+
+        // 5. Remove AvaloniaEdit built-in highlighting (must NOT be used)
+        editor.SyntaxHighlighting = null;
+
+        // Autosave
         editor.TextChanged += (_, __) =>
         {
             MainWindow.App.SetProjectStatus("Save Project");

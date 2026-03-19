@@ -13,6 +13,8 @@ public class URLifyer {
             throw new ArgumentNullException();
         }
 
+        if (domain.Protocol != "http" || domain.Protocol != "https") domain.Protocol = "http";
+
         var url = $"{domain.Protocol}://{domain.domain}/";
         return url;
     }

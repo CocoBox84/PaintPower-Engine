@@ -4,13 +4,13 @@
         xmlns:editors="clr-namespace:PaintPower.Editors"
         xmlns:vm="clr-namespace:PaintPower.VMPanel"
         x:Class="PaintPower.MainWindow"
-        Width="1280" Height="720"
+        Width="1120" Height="570"
         Title="PaintPower">
 
 	<Grid RowDefinitions="50,*">
 
-		<!-- HEADER -->
-		<Border Grid.Row="0" Background="#e0e0e0">
+		<!-- HEADER Background="#e0e0e0" -->
+		<Border Grid.Row="0" Background="#a3a3a3">
 			<Grid ColumnDefinitions="200,*,300" VerticalAlignment="Center">
 
 				<!-- LEFT: App title -->
@@ -50,7 +50,7 @@
                                VerticalAlignment="Center"
                                Foreground="#437" />
 
-					<Button Content="Upload project" />
+					<Button x:Name="UploadProjectButton" Content="Upload project" />
 
 					<!--It updates only when clicking this. I deleted it, it didn't fix my problem.-->
 					<ComboBox Width="120">

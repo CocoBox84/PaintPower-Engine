@@ -15,6 +15,7 @@
 		<Border>
 				<!-- 50% black overlay Background="#202020" -->
 			<ae:TextEditor x:Name="Editor"
+			   Foreground="White"
                ShowLineNumbers="True"
                FontFamily="Consolas"
                FontSize="14"
@@ -23,7 +24,8 @@
                HorizontalScrollBarVisibility="Auto"
                VerticalScrollBarVisibility="Auto"
                HorizontalAlignment="Stretch"
-               VerticalAlignment="Stretch" />
+               VerticalAlignment="Stretch" 
+						   />
 		</Border>
 	</Grid>
 </UserControl>

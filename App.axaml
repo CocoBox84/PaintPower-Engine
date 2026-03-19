@@ -37,77 +37,9 @@
 				</ControlTemplate>
 			</Application.Resources>
 
-			<Application.Styles>
-				<FluentTheme />
-				<!--<ClassicTheme />-->
-				<StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
-
-				<Style Selector="Control">
-					<Setter Property="Transitions" Value="{x:Null}"/>
-				</Style>
-
-				<Style Selector="Button:pressed /template/ Border#outer">
-					<Setter Property="BoxShadow" Value="0 0 0 0 #00000000"/>
-					<Setter Property="BorderBrush" Value="#4A4A4A"/>
-				</Style>
-
-				<Style Selector="Button:pressed /template/ Grid Border[Margin=2]">
-					<Setter Property="Background" Value="#C0C0C0"/>
-				</Style>
-
-				<Style Selector="Button.blue:pressed /template/ Grid Border[Margin=2]">
-					<Setter Property="Background" Value="#2F6BB8"/>
-				</Style>
-
-				<Style Selector="Button:pressed /template/ Grid Border[Margin=2]">
-					<Setter Property="Background">
-						<Setter.Value>
-							<LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-								<GradientStop Color="#D0D0D0" Offset="0"/>
-								<GradientStop Color="#E8E8E8" Offset="1"/>
-							</LinearGradientBrush>
-						</Setter.Value>
-					</Setter>
-				</Style>
-
-				<Style Selector="Button">
-					<Setter Property="Template" Value="{StaticResource ThreeDButtonTemplate}"/>
-					<Setter Property="Foreground" Value="Black"/>
-					<Setter Property="FontSize" Value="14"/>
-					<Setter Property="FontWeight" Value="Normal"/>
-					<Setter Property="Padding" Value="6"/>
-					<Setter Property="MinWidth" Value="80"/>
-					<Setter Property="MinHeight" Value="28"/>
-					<Setter Property="MaxHeight" Value="28" />
-				</Style>
-
-				<Style Selector="Button.white">
-					<Setter Property="Background" Value="#FFFFFF"/>
-					<Setter Property="Foreground" Value="Black"/>
-				</Style>
-
-				<Style Selector="Button.white:pressed">
-					<Setter Property="Background" Value="#3A7BD5"/>
-					<Setter Property="Foreground" Value="White"/>
-				</Style>
-
-				<Style Selector="Button.gray">
-					<Setter Property="Background" Value="#D0D0D0"/>
-				</Style>
-
-				<Style Selector="Button.gray:pressed">
-					<Setter Property="Background" Value="#E0E0E0"/>
-				</Style>
-
-				<Style Selector="Window, UserControl">
-					<Setter Property="Background" Value="#e0e0e0"/>
-				</Style>
-
-			</Application.Styles>
-
 	<Application.Styles>
 		<FluentTheme />
-		<!--<ClassicTheme />-->
+		<ClassicTheme />
 		<StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
 
 		<Style Selector="Control">
@@ -120,7 +52,7 @@
 
 		<Style Selector="Button:pressed /template/ Border#outer">
 			<Setter Property="BoxShadow" Value="0 0 0 0 #00000000"/>
-			<Setter Property="BorderBrush" Value="#4A4A4A"/>
+			<Setter Property="BorderBrush" Value="#f8f1b1"/>
 		</Style>
 
 		<Style Selector="Button:pressed /template/ Grid Border[Margin=2]">
