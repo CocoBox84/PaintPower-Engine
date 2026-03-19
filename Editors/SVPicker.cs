@@ -59,7 +59,7 @@ public class SVPicker : Control
         };
 
         // Redraw when Hue changes
-        this.PropertyChanged += (_, e) =>
+        PropertyChanged += (_, e) =>
         {
             if (e.Property == HueProperty)
                 InvalidateVisual();
@@ -115,7 +115,7 @@ public class SVPicker : Control
     {
         h = h % 360;
         double c = v * s;
-        double x = c * (1 - Math.Abs((h / 60) % 2 - 1));
+        double x = c * (1 - Math.Abs(h / 60 % 2 - 1));
         double m = v - c;
 
         double r = 0, g = 0, b = 0;

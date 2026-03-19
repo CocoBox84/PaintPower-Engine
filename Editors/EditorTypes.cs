@@ -11,9 +11,10 @@ public class EditorTypes
 {
     public static string[] Paint = { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp" };
 
-    public static string[] Script = { ".pss", ".c", ".h", ".cpp", ".hpp", ".lua", ".js", ".py",
+    public static string[] Script = { ".pxml", ".psf", ".pss", ".c", ".cs", ".c#", ".h", ".cpp", ".c++", ".hpp", ".lua", ".py",
         ".json", ".xml", ".yaml", ".yml", ".md", ".txt", ".spk", ".sxml", ".xss", ".xs", 
-        ".Coco", ".coco", ".script", "CocoScript", ".cocoscript", ".jav", ".java" };
+        ".Coco", ".coco", ".script", "CocoScript", ".cocoscript", ".jav", ".java", ".html", ".htm", ".xml", ".xaml", ".axaml", 
+        ".css", ".js", ".jsx", ".ts", ".m", ".json", ".jsonc" };
 
     public static string[] Animation = { ".wxa" };
     public static string[] Video = { ".mp4", ".mov" };
@@ -22,6 +23,8 @@ public class EditorTypes
     public static string FindEditorFromExt(string ext)
     {
         // Check each list for the extention.
+
+        ext = ext.ToLower();
 
         var result = "?";
 

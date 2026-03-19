@@ -41,7 +41,7 @@ namespace PaintPower.Editors
             {
                 for (int x = 0; x < Bounds.Width; x += size)
                 {
-                    bool dark = ((x / size) + (y / size)) % 2 == 0;
+                    bool dark = (x / size + y / size) % 2 == 0;
                     var brush = new SolidColorBrush(dark ? DarkColor : LightColor);
                     context.FillRectangle(brush, new Rect(x, y, size, size));
                 }

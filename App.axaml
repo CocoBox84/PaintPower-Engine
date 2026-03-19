@@ -39,7 +39,7 @@
 
 	<Application.Styles>
 		<FluentTheme />
-		<ClassicTheme />
+		<!--<ClassicTheme />-->
 		<StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
 
 		<Style Selector="Control">

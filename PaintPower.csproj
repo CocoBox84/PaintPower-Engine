@@ -38,7 +38,7 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <Folder Include="EditorTools\" />
+    <Folder Include="EditorTools\PaintEditorTools\" />
     <Folder Include="FileExplorer\" />
   </ItemGroup>
 
