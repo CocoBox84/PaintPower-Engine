@@ -5,7 +5,6 @@ using System.IO;
 using PaintPower.ProjectSystem;
 using PaintPower.Dialogs;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace PaintPower.FileExplorer;
@@ -14,7 +13,7 @@ public partial class ExplorerView : UserControl
 {
     public ObservableCollection<ExplorerItem> Items { get; } = new();
 
-    private string _currentDir;
+    private string _currentDir = "";
     private TempWorkspace _workspace;
 
     public ExplorerView()
@@ -26,9 +25,16 @@ public partial class ExplorerView : UserControl
     public void Initialize(TempWorkspace workspace)
     {
         _workspace = workspace;
-        _currentDir = workspace.ItemsDir;
+        _currentDir = workspace.ActiveRoot;
 
         FileList.ItemsSource = Items;
+        Refresh();
+    }
+
+    // Called when switching between project root and sprite root
+    public void SetRoot(string newRoot)
+    {
+        _currentDir = newRoot;
         Refresh();
     }
 
@@ -36,16 +42,20 @@ public partial class ExplorerView : UserControl
     {
         Items.Clear();
 
-        Items.Clear();
         if (_workspace == null || !Directory.Exists(_currentDir))
         {
             PathLabel.Text = "(no project)";
             return;
         }
 
-        string relativePath = (_currentDir.Replace(_workspace.ItemsDir, "").Replace("\\", "/")) + "/";
+        // Compute relative path inside ActiveRoot
+        string relative = _currentDir.Replace(_workspace.ActiveRoot, "")
+                                     .Replace("\\", "/");
 
-        PathLabel.Text = relativePath;
+        if (string.IsNullOrEmpty(relative))
+            relative = "/";
+
+        PathLabel.Text = relative;
 
         // Folders first
         foreach (var dir in Directory.GetDirectories(_currentDir))
@@ -75,32 +85,26 @@ public partial class ExplorerView : UserControl
     // -----------------------------
     private void OnGoRoot(object? sender, RoutedEventArgs e)
     {
-        _currentDir = _workspace.ItemsDir;
+        _currentDir = _workspace.ActiveRoot;
         Refresh();
     }
 
     private void OnGoUp(object? sender, RoutedEventArgs e)
     {
-        if (_currentDir == _workspace.ItemsDir)
+        if (_currentDir == _workspace.ActiveRoot)
             return;
 
         _currentDir = Directory.GetParent(_currentDir)!.FullName;
         Refresh();
     }
 
-    // Pseudocode plan:
-    // - The error is caused by passing 'this' (ExplorerView, a UserControl) to InputDialog.ShowAsync, which expects a Window.
-    // - To fix, get the parent Window of this control and pass it instead.
-    // - Use 'this.GetVisualRoot() as Window' or 'Window.GetWindow(this)' to get the parent window.
-    // - Apply this fix in both OnNewFile and OnNewFolder.
-
+    // -----------------------------
+    // Create File / Folder
+    // -----------------------------
     private async void OnNewFile(object? sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrEmpty(_currentDir))
-        {
-            // Either initialize to workspace default or show error/disable UI earlier
-            _currentDir = _workspace?.ItemsDir ?? throw new InvalidOperationException("Explorer not initialized.");
-        }
+        if (_workspace == null)
+            return;
 
         var dialog = new InputDialog("New File", "Enter file name:");
         var window = this.VisualRoot as Window;
@@ -110,11 +114,15 @@ public partial class ExplorerView : UserControl
             return;
 
         string path = Path.Combine(_currentDir, name);
-        if (!Directory.Exists(path) && !File.Exists(path))
+
+        if (!File.Exists(path) && !Directory.Exists(path))
             File.WriteAllText(path, "");
+        else
+            await ShowErrorPopup();
 
         MainWindow.App.SetProjectStatus("Save Project");
         MainWindow.App.saveNeeded = true;
+
         Refresh();
     }
 
@@ -130,12 +138,9 @@ public partial class ExplorerView : UserControl
         string path = Path.Combine(_currentDir, name);
 
         if (!Directory.Exists(path) && !File.Exists(path))
-        {
             Directory.CreateDirectory(path);
-        }
-        else {
-            ShowErrorPopup();
-        }
+        else
+            await ShowErrorPopup();
 
         MainWindow.App.SetProjectStatus("Save Project");
         MainWindow.App.saveNeeded = true;
@@ -143,14 +148,17 @@ public partial class ExplorerView : UserControl
         Refresh();
     }
 
-    private async Task ShowErrorPopup() {
-        var dialog = new PopupWindowDialog("File/Folder Creation Error!", "File or folder already exists in this directory!", "Error");
+    private async Task ShowErrorPopup()
+    {
+        var dialog = new PopupWindowDialog(
+            "File/Folder Creation Error!",
+            "File or folder already exists in this directory!",
+            "Error"
+        );
+
         var window = this.VisualRoot as Window;
-        try
-        {
-            await dialog.ShowAsync(window);
-        }
-        catch (Exception ex) { }
+        try { await dialog.ShowAsync(window); }
+        catch { }
     }
 
     // -----------------------------
@@ -175,8 +183,6 @@ public partial class ExplorerView : UserControl
 
         // Open file in editor
         if (VisualRoot is MainWindow main)
-        {
             main.OpenFile(item.FullPath);
-        }
     }
 }

@@ -14,7 +14,6 @@ namespace PaintPower.Editors;
 
 public partial class PaintEditor : EditorBase
 {
-    private readonly string _relativePath;
     private readonly TempWorkspace _workspace;
 
     private WriteableBitmap _bitmap;
@@ -35,12 +34,9 @@ public partial class PaintEditor : EditorBase
 
     public PaintEditor(string relativePath, TempWorkspace workspace)
     {
-        _relativePath = relativePath;
         _workspace = workspace;
 
         InitializeComponent();
-
-        LoadOrCreateImage();
 
         HueSlider.PropertyChanged += (_, __) =>
         {
@@ -110,23 +106,9 @@ public partial class PaintEditor : EditorBase
         BucketButton.Click += (_, __) => { _tool = ToolMode.Bucket; _isPanning = false; ResetCursor(); };
     }
 
-    override public void Save()
-    {
-        var fullPath = _workspace.MapToTemp(_relativePath);
-
-        using var fs = File.Open(fullPath, FileMode.Create);
-        _bitmap.Save(fs);
-
-        if (!MainWindow.App.saveNeeded)
-        {
-            MainWindow.App.SetProjectStatus("Save Project");
-            MainWindow.App.saveNeeded = true;
-        }
-    }
-
     private void LoadOrCreateImage()
     {
-        var fullPath = _workspace.MapToTemp(_relativePath);
+        var fullPath = _workspace.MapToTemp(RelativePath);
 
         try
         {
@@ -157,6 +139,26 @@ public partial class PaintEditor : EditorBase
         pixelGrid.PixelHeight = _bitmap.PixelSize.Height;
 
         CanvasImage.Source = _bitmap;
+    }
+
+    override public void Save()
+    {
+        var fullPath = _workspace.MapToTemp(RelativePath);
+
+        using var fs = File.Open(fullPath, FileMode.Create);
+        _bitmap.Save(fs);
+
+        if (!MainWindow.App.saveNeeded)
+        {
+            MainWindow.App.SetProjectStatus("Save Project");
+            MainWindow.App.saveNeeded = true;
+        }
+    }
+
+    public override void SetRelativePath(string path)
+    {
+        base.SetRelativePath(path);
+        LoadOrCreateImage();
     }
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)

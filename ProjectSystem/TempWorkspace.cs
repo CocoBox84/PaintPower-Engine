@@ -8,16 +8,33 @@ public class TempWorkspace
     public string Root { get; }
     public string ItemsDir => Path.Combine(Root, "items");
 
+    public string ActiveRoot { get; private set; }
+
+    public void SetActiveRoot(string path)
+    {
+        ActiveRoot = path;
+    }
+
     public TempWorkspace()
     {
         Root = Path.Combine(Path.GetTempPath(), "PaintPower_" + Guid.NewGuid());
         Directory.CreateDirectory(Root);
+
         Directory.CreateDirectory(ItemsDir);
+        ActiveRoot = ItemsDir; // default
     }
 
     public string MapToTemp(string projectRelativePath)
     {
-        return Path.Combine(ItemsDir, projectRelativePath.Replace("/", "\\"));
+        // If the path is already inside ActiveRoot, return it directly
+        if (projectRelativePath.StartsWith(ActiveRoot, StringComparison.OrdinalIgnoreCase))
+            return projectRelativePath;
+
+        // If the path is absolute, return it
+        if (Path.IsPathRooted(projectRelativePath))
+            return projectRelativePath;
+
+        return Path.Combine(ActiveRoot, projectRelativePath.Replace("/", "\\"));
     }
 
     public void ImportFile(string sourcePath, string relativePath)

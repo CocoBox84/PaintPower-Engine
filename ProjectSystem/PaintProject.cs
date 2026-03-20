@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
@@ -7,9 +8,11 @@ namespace PaintPower.ProjectSystem;
 
 public class PaintProject
 {
-    public string ProjectPath { get; set; } = "";
+    public string ProjectPath { get; set; } = ""; // Path to zip file.
     public TempWorkspace Workspace { get; }
     public ProjectMetadata Metadata { get; private set; }
+
+    public List<PaintSprite> Sprites { get; private set; } = new(); // Sprite list
 
     public string ProjectName { get; private set; } = string.Empty;
 
@@ -58,6 +61,9 @@ public class PaintProject
         {
             Metadata = new ProjectMetadata();
         }
+
+        // Now that the project is loaded
+        LoadSprites();
     }
 
     // -------------------------
@@ -102,6 +108,26 @@ public class PaintProject
     {
         string json = JsonSerializer.Serialize(Metadata, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(Path.Combine(Workspace.Root, "project.json"), json);
+    }
+
+
+    public void LoadSprites()
+    {
+        string spritesDir = Path.Combine(Workspace.ItemsDir, "sprites");
+
+        if (!Directory.Exists(spritesDir))
+            return;
+
+        foreach (var dir in Directory.GetDirectories(spritesDir))
+        {
+            var sprite = new PaintSprite
+            {
+                Name = Path.GetFileName(dir),
+                SpriteFolder = dir
+            };
+
+            Sprites.Add(sprite);
+        }
     }
 }
 

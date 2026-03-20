@@ -7,6 +7,7 @@ using PaintPower.FileExplorer;
 using PaintPower.Logging;
 using PaintPower.Networking;
 using PaintPower.ProjectSystem;
+using PaintPower.SpriteEditor;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -20,6 +21,8 @@ public partial class MainWindow : Window
     private readonly PaintProject _project;
     private EditorBase _editor;
     public Server server;
+
+    private SpriteEditorView _spriteEditorView;
 
     public bool saveNeeded = false;
 
@@ -57,6 +60,17 @@ public partial class MainWindow : Window
         return status;
     }
 
+    private void OnSpriteSelected(PaintSprite sprite)
+    {
+        // Create the sprite editor panel
+        _spriteEditorView = new SpriteEditorView(sprite, _project.Workspace);
+
+        // Replace the center panel with the sprite editor
+        CenterHost.Content = _spriteEditorView;
+
+        SetProjectStatus($"Editing Sprite: {sprite.Name}");
+    }
+
     protected override async void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
@@ -74,8 +88,6 @@ public partial class MainWindow : Window
 
             Title = $"PaintPower - {_project.Metadata.name}";
 
-        Explorer.Initialize(_project.Workspace);
-
         SetProjectStatus("Not edited yet.");
 
         if (!string.IsNullOrWhiteSpace(_project.Metadata.OpenFile))
@@ -84,23 +96,28 @@ public partial class MainWindow : Window
             if (File.Exists(fullPath))
                 OpenFile(fullPath);
         }
+
+        SpriteManager.Initialize(_project);
+        SpriteManager.SpriteSelected += OnSpriteSelected;
     }
 
-    public void OpenEditor(EditorBase editor)
+    /*public void OpenEditor(EditorBase editor)
     {
         _editor = editor;
-        EditorHost.Content = editor;
-    }
+        CenterHost.Content = editor;
+    }*/
 
     public void OpenFile(string path)
     {
         var editor = _editorManager.GetEditorFromFileType(path);
-        OpenEditor(editor);
+
+        if (_spriteEditorView != null)
+            _spriteEditorView.OpenEditor(editor, path);
     }
 
     public void CloseEditor()
     {
-        EditorHost.Content = null;
+        CenterHost.Content = null;
         _editor = null;
     }
 

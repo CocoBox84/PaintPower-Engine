@@ -1,0 +1,37 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PaintPower.SpriteEditor.SpriteManagerView">
+
+	<Border Background="#303030" Padding="8">
+		<Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+
+			<!-- Header -->
+			<TextBlock Text="Sprites"
+                       Foreground="White"
+                       FontSize="16"
+                       Margin="0,0,0,4"/>
+
+			<!-- Sprite List -->
+			<ListBox x:Name="SpriteList"
+                     Grid.Row="1"
+                     Background="#202020"
+                     BorderBrush="#404040"
+                     BorderThickness="1"
+                     SelectionChanged="OnSpriteSelected"
+                     DoubleTapped="OnSpriteDoubleTapped"/>
+
+			<!-- Buttons -->
+			<StackPanel Grid.Row="2"
+                        Orientation="Horizontal"
+                        Spacing="6">
+				<Button Content="New Sprite"
+                        Classes="white"
+                        Click="OnNewSprite"/>
+				<Button Content="Import"
+                        Classes="white"
+                        Click="OnImportSprite"/>
+			</StackPanel>
+
+		</Grid>
+	</Border>
+</UserControl>

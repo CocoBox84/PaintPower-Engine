@@ -16,7 +16,6 @@ namespace PaintPower.Editors;
 
 public partial class ScriptEditor : EditorBase
 {
-    private readonly string _relativePath;
     private readonly TempWorkspace _workspace;
     private TextMate.Installation _textMateInstallation;
     private RegistryOptions _registryOptions;
@@ -28,7 +27,9 @@ public partial class ScriptEditor : EditorBase
     public ScriptEditor(string relativePath, TempWorkspace workspace)
     {
         Debug.WriteLine("Loading Script Editor...");
-        _relativePath = relativePath;
+        //SetRelativePath(relativePath);
+
+
         _workspace = workspace;
 
         AvaloniaXamlLoader.Load(this);
@@ -37,7 +38,7 @@ public partial class ScriptEditor : EditorBase
 
         if (editor != null)
         {
-            editor.Text = _workspace.LoadText(relativePath);
+            editor.Text = _workspace.LoadText(RelativePath);
             editor.Focus();
         }
 
@@ -93,6 +94,15 @@ public partial class ScriptEditor : EditorBase
     override public void Save()
     {
         var editor = this.FindControl<TextEditor>("Editor");
-        _workspace.SaveFile(_relativePath, editor.Text);
+        _workspace.SaveFile(RelativePath, editor.Text);
+    }
+
+    public override void SetRelativePath(string path)
+    {
+        base.SetRelativePath(path);
+
+        var editor = this.FindControl<TextEditor>("Editor");
+        if (editor != null)
+            editor.Text = _workspace.LoadText(RelativePath);
     }
 }

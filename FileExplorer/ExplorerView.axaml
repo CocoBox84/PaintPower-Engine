@@ -3,31 +3,30 @@
              x:Class="PaintPower.FileExplorer.ExplorerView">
 
 	<Border Background="#99000000">
+		<Grid RowDefinitions="Auto,Auto,*" Margin="8">
 
-	<Grid RowDefinitions="Auto,Auto,*" Margin="8">
+			<!-- Toolbar -->
+			<StackPanel Orientation="Horizontal" Spacing="6">
+				<Button Classes="white" Content="New" Click="OnNewFile"/>
+				<Button Classes="white" Content="New Folder" Click="OnNewFolder"/>
+				<Button Classes="white" Content="/" Click="OnGoRoot"/>
+				<Button Classes="white" Content=".." Click="OnGoUp"/>
+			</StackPanel>
 
-		<!-- Toolbar -->
-		<StackPanel Orientation="Horizontal" Spacing="6">
-			<Button Classes="white" Content="New" Click="OnNewFile"/>
-			<Button Classes="white" Content="New Folder" Click="OnNewFolder"/>
-			<Button Classes="white" Content="/" Click="OnGoRoot"/>
-			<Button Classes="white" Content=".." Click="OnGoUp"/>
-		</StackPanel>
+			<!-- Current Path -->
+			<TextBlock x:Name="PathLabel"
+                       Grid.Row="1"
+                       FontSize="14"
+                       Margin="4"
+                       Foreground="White"/>
 
-		<!-- Current Path -->
-		<TextBlock x:Name="PathLabel"
-                   Grid.Row="1"
-                   FontSize="14"
-                   Margin="4"
-				   Foreground="White"/>
+			<!-- File List -->
+			<Border Background="#20202020" Grid.Row="2">
+				<ListBox x:Name="FileList"
+                         DoubleTapped="OnItemDoubleTapped"
+                         SelectionChanged="OnSelectionChanged"/>
+			</Border>
 
-		<!-- File List -->
-		<Border Background="#20202020" Grid.Row="2">
-			<ListBox x:Name="FileList"
-					 Grid.Row="2"
-					 DoubleTapped="OnItemDoubleTapped"
-					 SelectionChanged="OnSelectionChanged"/>
-		</Border>
-	</Grid>
+		</Grid>
 	</Border>
 </UserControl>
