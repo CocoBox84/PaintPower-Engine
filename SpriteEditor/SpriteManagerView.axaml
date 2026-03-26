@@ -17,6 +17,7 @@
                      Background="#202020"
                      BorderBrush="#404040"
                      BorderThickness="1"
+					 Foreground="White"
                      SelectionChanged="OnSpriteSelected"
                      DoubleTapped="OnSpriteDoubleTapped"/>
 

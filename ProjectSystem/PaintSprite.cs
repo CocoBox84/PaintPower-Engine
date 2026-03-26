@@ -12,4 +12,6 @@ public class PaintSprite
     public string ThumbnailPath => Path.Combine(SpriteFolder, "Sprite.png");
     public string ScriptPath => Path.Combine(SpriteFolder, "Sprite.pss");
     public string ItemsFolder => Path.Combine(SpriteFolder, "items");
+    public override string ToString() => Name;
+
 }
