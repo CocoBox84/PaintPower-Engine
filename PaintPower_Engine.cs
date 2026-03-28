@@ -16,10 +16,15 @@ using System.Threading.Tasks;
 namespace PaintPower;
 
 public class PaintPower_Engine {
-    private readonly Editor _editorManager;
-    private readonly PaintProject _project;
+
+    public static string version = "Pre-Alpha 1.0.0.2 build 6053282026";
+
+    private Editor _editorManager;
+    private PaintProject _project;
     private EditorBase _editor;
     public Server server;
+
+    public bool isNewProject = true;
 
     private SpriteEditorView _spriteEditorView;
 
@@ -30,7 +35,6 @@ public class PaintPower_Engine {
 
     public PaintPower_Engine()
     {
-
         _project = new PaintProject();
         _editorManager = new Editor(_project.Workspace);
         server = new Server();
@@ -69,29 +73,50 @@ public class PaintPower_Engine {
         SetProjectStatus($"Editing Sprite: {sprite.Name}");
     }
 
+    public async void newProject()
+    {
+        if (saveNeeded)
+        {
+            var dialog = new SaveBeforeContinueDialog();
+            var result = await dialog.ShowAsync(MainWindow.window);
+
+            switch (result)
+            {
+                case "save":
+                    await Save();
+                    break;
+
+                case "saveas":
+                    SaveAs();
+                    break;
+
+                case "dontsave":
+                    break; // continue without saving
+
+                case null:
+                    return; // cancel new project
+            }
+        }
+
+        // Reset everything
+        _project = new PaintProject();
+        _editorManager = new Editor(_project.Workspace);
+        server = new Server();
+
+        Start();
+    }
+
     public async void Start() {
 
         await Task.Yield();
 
-        var dialog = new ProjectLoaderDialog();
-        var result = await new ProjectLoaderDialog().ShowDialog<ProjectLoaderResult?>(window);
-        if (result == null) {  window.Close(); return; }
+        CloseEditor();
 
-        if (result.Mode == ProjectLoaderMode.New)
-            _project.CreateNew(result.Path, Path.GetFileNameWithoutExtension(result.Path));
-        else // if (result.Mode == ProjectLoaderMode.Open) 
-            _project.Load(result.Path);
+        _project.CreateNew();
 
         window.Title = $"PaintPower - {_project.Metadata.name}";
 
         SetProjectStatus("Not edited yet.");
-
-        if (!string.IsNullOrWhiteSpace(_project.Metadata.OpenFile))
-        {
-            string fullPath = _project.Workspace.MapToTemp(_project.Metadata.OpenFile);
-            if (File.Exists(fullPath))
-                OpenFile(fullPath);
-        }
 
         window.SpriteManager.Initialize(_project);
         window.SpriteManager.SpriteSelected += OnSpriteSelected;
@@ -146,7 +171,7 @@ public class PaintPower_Engine {
     // Requires it in order to await it. C# core.
     async public Task Save()
     {
-        if (!saveNeeded) return;
+        if (!saveNeeded && !isNewProject) return;
 
         try
         {
@@ -165,16 +190,28 @@ public class PaintPower_Engine {
                 return;
             }
 
+            // If no path yet -> ask user where to save
+            if (string.IsNullOrWhiteSpace(_project.ProjectPath) || isNewProject)
+            {
+                isNewProject = true; // Keep isNewProject checks
+
+                var res = await _project.SaveNewProject(MainWindow.window);
+
+                if (string.IsNullOrWhiteSpace(res.Path))
+                    return; // user cancelled
+
+                _project.ProjectPath = res.Path;
+                isNewProject = false;
+            }
+
             Log.QuickLog("Saving Project...");
 
             // Start animation (non-blocking)
             var animationTask = RunSavingAnimation();
 
             // Run save off UI thread
-            await Task.Run(() =>
-            {
-                ProjectSaver.Save(_project, _editor);
-            });
+            await ProjectSaver.Save(_project, _editor);
+            
 
             // Stop animation
             _isSavingAnimationRunning = false;
@@ -213,10 +250,8 @@ public class PaintPower_Engine {
             var animationTask = RunSavingAnimation();
 
             // Run save off UI thread
-            await Task.Run(() =>
-            {
-                ProjectSaver.Save(_project, _editor);
-            });
+            
+            await ProjectSaver.Save(_project, _editor);
 
             // Stop animation
             _isSavingAnimationRunning = false;

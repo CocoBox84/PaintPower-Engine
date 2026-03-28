@@ -12,4 +12,11 @@ public static class Translator
     {
         return langList[s];
     }
+
+    public static string GetLang(string s) { return langList[s]; }
+
+    public static string Translate(string s)
+    {
+        return Map(s);
+    }
 }

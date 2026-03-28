@@ -1,22 +1,19 @@
-﻿using System.Threading.Tasks;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
+using System.Threading.Tasks;
 
 namespace PaintPower.Dialogs;
 
-public partial class DoSaveWindowDialog : Window
+public partial class SaveBeforeContinueDialog : Window
 {
-    public DoSaveWindowDialog()
+    public SaveBeforeContinueDialog()
     {
         InitializeComponent();
-        Title = "Overwrite your old data?!";
-        PromptText.Text = "Do you want to overwrite your save data?";
-        PromptText2.Text = "(This will save your work in the currently open editor.)";
+        Title = "Save Before Continuing?";
     }
 
     public Task<string?> ShowAsync(Window parent)
     {
-        // This returns a Task<string?> that completes when Close(result) is called
         return this.ShowDialog<string?>(parent);
     }
 
@@ -28,6 +25,11 @@ public partial class DoSaveWindowDialog : Window
     private void OnSaveAs(object? sender, RoutedEventArgs e)
     {
         Close("saveas");
+    }
+
+    private void OnDontSave(object? sender, RoutedEventArgs e)
+    {
+        Close("dontsave");
     }
 
     private void OnCancel(object? sender, RoutedEventArgs e)

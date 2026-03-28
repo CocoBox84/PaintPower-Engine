@@ -39,6 +39,10 @@ public partial class MainWindow : Window
         SaveAsButton.Click += (_, __) => App.SaveAs();
         ProjectStatus.PointerPressed += App.StatusClicked;
         UploadProjectButton.Click += (_, __) => App.SaveToServer();
+        NewButton.Click += (_, __) => App.newProject();
+
+        // Display PaintPower version:
+        VersionInfoTextBlock.Text = PaintPower_Engine.version;
 
         // After, make a static reference.
         window = this;

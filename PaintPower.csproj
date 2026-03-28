@@ -47,4 +47,8 @@
       <DependentUpon>DoSaveWindowDialog.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+
+	<ItemGroup>
+		<None Include="Assets\Untitled.xPaint" CopyToOutputDirectory="Always" />
+	</ItemGroup>
 </Project>

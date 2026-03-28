@@ -1,0 +1,22 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PaintPower.Dialogs.SaveBeforeContinueDialog"
+        Width="430" Height="160"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="10" Spacing="10">
+        <TextBlock Text="Save before continuing?" FontWeight="Bold"/>
+        <TextBlock Text="Your changes will be lost if you don't save." />
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Left"
+                    Spacing="16"
+                    Margin="12,0">
+
+            <Button Classes="white" Content="Save" Click="OnSave"/>
+            <Button Classes="white" Content="Save As" Click="OnSaveAs"/>
+            <Button Classes="white" Content="Don't Save" Click="OnDontSave"/>
+            <Button Classes="white" Content="Cancel" Click="OnCancel"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

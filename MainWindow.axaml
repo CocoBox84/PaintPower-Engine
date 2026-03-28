@@ -20,6 +20,11 @@
                            Margin="12,0"
                            FontSize="20"
                            Foreground="#333" />
+				<TextBlock Text="" 
+						   Margin="17,-10"
+						   FontSize="10"
+						   Foreground="black"
+						   x:Name="VersionInfoTextBlock" />
 
 				<!-- CENTER: Menu buttons -->
 				<StackPanel Orientation="Horizontal"
@@ -31,7 +36,7 @@
 
 					<Button Classes="white" Content="File" />
 					<Button Classes="white" Content="Edit" />
-					<Button Classes="white" Content="New" />
+					<Button Classes="white" Content="New" x:Name="NewButton" />
 					<Button Classes="white" Content="Save" x:Name="SaveButton" />
 					<Button Classes="white" Content="Save As" x:Name="SaveAsButton" />
 					<Button Classes="white" Content="Make connection" />

@@ -2,6 +2,7 @@
 using PaintPower.Editors;
 using PaintPower.Networking;
 using Avalonia.Threading;
+using System.Threading.Tasks;
 
 // Save to server or on local machine;
 
@@ -10,23 +11,21 @@ namespace PaintPower.ProjectSystem;
 class ProjectSaver {
     // Main function that should be called when saving a project.
 
-public static void Save(PaintProject project, EditorBase editor)
-{
-    // 1. Run editor.Save() on UI thread (safe)
-    if (editor != null)
+    public static async Task Save(PaintProject project, EditorBase editor)
     {
-        Dispatcher.UIThread.InvokeAsync(() =>
+        if (editor != null)
         {
-            editor.Save(); // touches UI safely
-        }).Wait(); // wait for UI thread to finish
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                editor.Save();
+            });
+        }
+
+        if (project != null)
+            await project.SaveToDisk();
     }
 
-    // 2. Run project save on background thread (safe)
-    if (project != null)
-        project.SaveToDisk();
-}
-
-async public static void PublishToServer(PaintProject project, EditorBase editor, Server server)
+    async public static void PublishToServer(PaintProject project, EditorBase editor, Server server)
     {
         await PaintPower_Engine.App.Save();
         if (server.checkConnection() && project != null)

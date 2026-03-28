@@ -1,8 +1,13 @@
-﻿using System;
+﻿using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
+using PaintPower.Dialogs;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace PaintPower.ProjectSystem;
 
@@ -10,7 +15,7 @@ public class PaintProject
 {
     public string ProjectPath { get; set; } = ""; // Path to zip file.
     public TempWorkspace Workspace { get; }
-    public ProjectMetadata Metadata { get; private set; }
+    public ProjectMetadata Metadata { get; set; }
 
     public List<PaintSprite> Sprites { get; private set; } = new(); // Sprite list
 
@@ -25,17 +30,48 @@ public class PaintProject
     // -------------------------
     // CREATE NEW PROJECT
     // -------------------------
-    public void CreateNew(string projectPath, string Name)
+    public void CreateNew()
     {
-        ProjectPath = projectPath;
-        Metadata = new ProjectMetadata
-        {
-            name = Name,
-            OpenFile = null
-        };
+        var loader = new ProjectLoader();
+        loader.LoadDefaultProject(this);
 
+        // ProjectPath stays empty → user must Save As
+        ProjectPath = "";
+
+        Metadata = new ProjectMetadata { name = "Untitled", OpenFile = null };
         SaveMetadata();
-        SaveToDisk();
+    }
+
+    // -------------------------
+    // SAVE NEW PROJECT
+    // -------------------------
+    public async Task<ProjectLoaderResult> SaveNewProject(Window owner)
+    {
+        var savePicker = await owner.StorageProvider.SaveFilePickerAsync(
+            new FilePickerSaveOptions
+            {
+                Title = "Create New Project",
+                DefaultExtension = "xPaint",
+                SuggestedFileName = $"{Metadata.name}.xPaint",
+                ShowOverwritePrompt = true
+            });
+
+        if (savePicker == null)
+        {
+            return new ProjectLoaderResult
+            {
+                Mode = ProjectLoaderMode.New,
+                Path = string.Empty
+            };
+        }
+
+        PaintPower_Engine.window.Title = $"PaintPower - {Metadata.name}";
+
+        return new ProjectLoaderResult
+        {
+            Mode = ProjectLoaderMode.New,
+            Path = savePicker.Path.LocalPath
+        };
     }
 
     // -------------------------
@@ -67,41 +103,36 @@ public class PaintProject
     }
 
     // -------------------------
-    // SAVE PROJECT AS ZIP
-    // -------------------------
-    public void SaveToZip()
-    {
-        if (string.IsNullOrWhiteSpace(ProjectPath))
-            throw new Exception("ProjectPath is not set.");
-
-        // Update metadata file
-        SaveMetadata();
-
-        // Recreate ZIP
-        if (File.Exists(ProjectPath))
-            File.Delete(ProjectPath);
-
-        ZipFile.CreateFromDirectory(Workspace.Root, Path.Combine(Workspace.Root, "..", "Paintfile", "file.zip"));
-    }
-    public void ClearTempZip() {
-        File.Delete(Path.Combine(Workspace.Root, "..", "Paintfile", "file.zip"));
-    }
-    // -------------------------
     // SAVE PROJECT
     // -------------------------
-    public void SaveToDisk()
+    public async Task SaveToDisk()
     {
-        if (string.IsNullOrWhiteSpace(ProjectPath))
-            throw new Exception("ProjectPath is not set.");
-
-        // Update metadata file
+        // Always update metadata first
         SaveMetadata();
 
-        // Recreate ZIP
-        if (File.Exists(ProjectPath))
-            File.Delete(ProjectPath);
+        // If no path yet -> ask user where to save
+        if (string.IsNullOrWhiteSpace(ProjectPath))
+        {
+            PaintPower_Engine.App.isNewProject = true; // Keep isNewProject checks
 
-        ZipFile.CreateFromDirectory(Workspace.Root, ProjectPath);
+            var result = await SaveNewProject(MainWindow.window);
+
+            if (string.IsNullOrWhiteSpace(result.Path))
+                return; // user cancelled
+
+            ProjectPath = result.Path;
+            PaintPower_Engine.App.isNewProject = false;
+        }
+
+        // Recreate ZIP
+        // Run ZIP creation on background thread
+        await Task.Run(() =>
+        {
+            if (File.Exists(ProjectPath))
+                File.Delete(ProjectPath);
+
+            ZipFile.CreateFromDirectory(Workspace.Root, ProjectPath);
+        });
     }
 
     private void SaveMetadata()
