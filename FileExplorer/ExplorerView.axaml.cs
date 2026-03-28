@@ -182,7 +182,6 @@ public partial class ExplorerView : UserControl
         }
 
         // Open file in editor
-        if (VisualRoot is MainWindow main)
-            main.OpenFile(item.FullPath);
+        PaintPower_Engine.App.OpenFile(item.FullPath);
     }
 }

@@ -28,7 +28,7 @@ public static void Save(PaintProject project, EditorBase editor)
 
 async public static void PublishToServer(PaintProject project, EditorBase editor, Server server)
     {
-        await new MainWindow().Save();
+        await PaintPower_Engine.App.Save();
         if (server.checkConnection() && project != null)
         {
             await server.UploadProject(project);
