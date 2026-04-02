@@ -7,10 +7,10 @@
 
 			<!-- Toolbar -->
 			<StackPanel Orientation="Horizontal" Spacing="6">
-				<Button Classes="white" Content="New" Click="OnNewFile"/>
-				<Button Classes="white" Content="New Folder" Click="OnNewFolder"/>
-				<Button Classes="white" Content="/" Click="OnGoRoot"/>
-				<Button Classes="white" Content=".." Click="OnGoUp"/>
+				<Button x:Name="NewFileButton" Classes="white" Content="New" Click="OnNewFile"/>
+				<Button x:Name="NewFolderButton" Classes="white" Content="New Folder" Click="OnNewFolder"/>
+				<Button x:Name="GoRootButton" Classes="white" Content="Go to Root" Click="OnGoRoot"/>
+				<Button x:Name="GoUpButton" Classes="white" Content="Go Up" Click="OnGoUp"/>
 			</StackPanel>
 
 			<!-- Current Path -->

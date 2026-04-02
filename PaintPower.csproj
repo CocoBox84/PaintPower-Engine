@@ -16,7 +16,9 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.3.12" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12" />
-    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <!--Condition
+    below is needed to remove Avalonia.Diagnostics package from build output in Release
+    configuration.-->
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.12">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
@@ -26,20 +28,21 @@
     <PackageReference Include="Classic.CommonControls.Avalonia" Version="11.3.0.3" />
   </ItemGroup>
 
-	<ItemGroup>
-		<Reference Include="AvaloniaEdit">
-			<HintPath>..\AvaloniaEdit\net6.0\AvaloniaEdit.dll</HintPath>
-			
-		</Reference>
-	</ItemGroup>
+  <ItemGroup>
+    <Reference Include="AvaloniaEdit">
+      <HintPath>..\AvaloniaEdit\net6.0\AvaloniaEdit.dll</HintPath>
 
-	<ItemGroup>
-		<AvaloniaResource Include="Assets\**" />
-	</ItemGroup>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="EditorTools\PaintEditorTools\" />
     <Folder Include="FileExplorer\" />
+    <Folder Include="NewFolder\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,7 +51,8 @@
     </Compile>
   </ItemGroup>
 
-	<ItemGroup>
-		<None Include="Assets\Untitled.xPaint" CopyToOutputDirectory="Always" />
-	</ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\Untitled.xPaint" CopyToOutputDirectory="Always" />
+    <None Include="Assets\lang\**\*" CopyToOutputDirectory="Always" />
+  </ItemGroup>
 </Project>

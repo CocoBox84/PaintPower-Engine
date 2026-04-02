@@ -8,16 +8,29 @@ using PaintPower.Logging;
 using PaintPower.Networking;
 using PaintPower.ProjectSystem;
 using PaintPower.SpriteEditor;
+using PaintPower.Time;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using PaintPower.Accessibility.Translation;
+using System.Reflection;
 namespace PaintPower;
 
-public class PaintPower_Engine {
+public class PaintPower_Engine
+{
+    public static readonly string versionNumber = "1.0.1.0";
+    public static readonly string buildTime = new Date().getBuildTimestamp();
+    public static readonly string devStatus = "Pre-Alpha";
+    public static string MajorVersion = $"{Translator.Map(devStatus)} {versionNumber}";
+    public static string version = $"{Translator.Map("Version")}: {MajorVersion} {Translator.Map("build")} {buildTime}";
 
-    public static string version = "Pre-Alpha 1.0.0.2 build 6053282026";
+    public void translateVersion()
+    {
+        MajorVersion = $"{Translator.Map("Pre-Alpha")} 1.0.1.0";
+        version = $"{Translator.Map("Version")}: {MajorVersion} {Translator.Map("build")} {buildTime}";
+    }
 
     private Editor _editorManager;
     private PaintProject _project;
@@ -39,11 +52,36 @@ public class PaintPower_Engine {
         _editorManager = new Editor(_project.Workspace);
         server = new Server();
 
+        Log.QuickLog(version);
+
         // After, make a static reference.
         App = this;
     }
 
-    public void attachWindow(MainWindow w) {
+    public void setupTranslation()
+    {
+                // Set-up translation
+        Translator.load(null);
+
+        var langs = Translator.GetAvailableLanguages();
+
+        foreach (var pair in langs)
+        {
+            string fullName = pair.Key;
+            string code = pair.Value;
+
+            var item = new MenuItem { Header = fullName };
+            item.Click += (_, __) =>
+            {
+                Translator.load(code);
+            };
+
+            window.LanguageDropdown.Items.Add(item);
+        }
+    }
+
+    public void attachWindow(MainWindow w)
+    {
         window = w;
     }
 
@@ -70,7 +108,27 @@ public class PaintPower_Engine {
         // Replace the center panel with the sprite editor
         window.CenterHost.Content = _spriteEditorView;
 
-        SetProjectStatus($"Editing Sprite: {sprite.Name}");
+        SetProjectStatus($"{Translator.Translate("Editing Sprite:")} {sprite.Name}");
+    }
+
+    public void OpenProjectFile()
+    {
+        var openPicker = window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = Translator.Map("Open PaintPower Project"),
+            AllowMultiple = false,
+            FileTypeFilter = new[] { new FilePickerFileType(Translator.Map("PaintPower Project")) { Patterns = new[] { "*.xPaint" } } }
+        }).ContinueWith(async t =>
+        {
+            var result = await t;
+            if (result.Count > 0)
+            {
+                string path = result[0].Path.LocalPath;
+                _project.Load(path);
+                _project.ProjectPath = path;
+                window.Title = $"{Translator.Map("PaintPower")} - {_project.Metadata.name}";
+            }
+        });
     }
 
     public async void newProject()
@@ -106,7 +164,8 @@ public class PaintPower_Engine {
         Start();
     }
 
-    public async void Start() {
+    public async void Start()
+    {
 
         await Task.Yield();
 
@@ -114,12 +173,15 @@ public class PaintPower_Engine {
 
         _project.CreateNew();
 
-        window.Title = $"PaintPower - {_project.Metadata.name}";
+        window.Title = $"{Translator.Map("PaintPower")} - {_project.Metadata.name}";
 
-        SetProjectStatus("Not edited yet.");
+        SetProjectStatus(Translator.Translate("Not edited yet."));
 
         window.SpriteManager.Initialize(_project);
         window.SpriteManager.SpriteSelected += OnSpriteSelected;
+
+        // Set up translation
+        setupTranslation();
     }
 
     /*public void OpenEditor(EditorBase editor)
@@ -168,7 +230,7 @@ public class PaintPower_Engine {
     }
 
     // Save function. Don't even care about what it returns, but C#
-    // Requires it in order to await it. C# core.
+    // Requires it to be a Task in order to await it. C# core.
     async public Task Save()
     {
         if (!saveNeeded && !isNewProject) return;
@@ -211,14 +273,13 @@ public class PaintPower_Engine {
 
             // Run save off UI thread
             await ProjectSaver.Save(_project, _editor);
-            
 
             // Stop animation
             _isSavingAnimationRunning = false;
             await animationTask; // wait for animation loop to exit
 
             // Final status
-            Log.QuickLog(SetProjectStatus("Project Saved!"));
+            Log.QuickLog(SetProjectStatus(Translator.Map("Project Saved!")));
         }
         catch (Exception ex)
         {
@@ -250,7 +311,7 @@ public class PaintPower_Engine {
             var animationTask = RunSavingAnimation();
 
             // Run save off UI thread
-            
+
             await ProjectSaver.Save(_project, _editor);
 
             // Stop animation

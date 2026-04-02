@@ -13,9 +13,9 @@
                             Spacing="16"
                             Grid.Column="1"
                             Margin="12,0">
-			<Button Classes="white" Content="Save" Click="OnSave"/>
-			<Button Classes="white" Content="Save As" Click="OnSaveAs"/>
-			<Button Classes="white" Content="Cancel" Click="OnCancel"/>
+			<Button x:Name="SaveButton" Classes="white" Content="Save" Click="OnSave"/>
+			<Button x:Name="SaveAsButton" Classes="white" Content="Save As" Click="OnSaveAs"/>
+			<Button x:Name="CancelButton" Classes="white" Content="Cancel" Click="OnCancel"/>
 		</StackPanel>
     </StackPanel>
 </Window>

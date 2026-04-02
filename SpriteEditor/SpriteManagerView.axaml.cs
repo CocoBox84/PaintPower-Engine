@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
+using PaintPower.Accessibility.Translation;
 using PaintPower.ProjectSystem;
 using System;
 using System.Collections.ObjectModel;
@@ -19,6 +20,23 @@ public partial class SpriteManagerView : UserControl
     {
         InitializeComponent();
         SpriteList.ItemsSource = Sprites;
+    }
+
+    private string translate(string s)
+    {
+        return Translator.Map(s);
+    }
+
+    public void TranslateGUI()
+    {
+        DeleteSpriteButton.Content = translate("Delete");
+        ExportSpriteButton.Content = translate("Export");
+        ImportSpriteButton.Content = translate("Import");
+        RenameSpriteButton.Content = translate("Rename");
+        DuplicateSpriteButton.Content = translate("Duplicate");
+        NewSpriteButton.Content = translate("New Sprite");
+
+        InvalidateVisual();
     }
 
     public void Initialize(PaintProject project)
@@ -44,7 +62,7 @@ public partial class SpriteManagerView : UserControl
 
     private void OnNewSprite(object? sender, RoutedEventArgs e)
     {
-        var name = "NewSprite_" + (Sprites.Count + 1);
+        var name = Translator.Map("Sprite") + " " + (Sprites.Count + 1);
 
         string spritesDir = Path.Combine(_project.Workspace.ItemsDir, "sprites");
         Directory.CreateDirectory(spritesDir);
@@ -71,6 +89,56 @@ public partial class SpriteManagerView : UserControl
 
     private void OnImportSprite(object? sender, RoutedEventArgs e)
     {
-        // TODO: Implement .pSprite import
+        if (SpriteList.SelectedItem is PaintSprite sprite)
+        {
+            // TODO: Implement .pSprite import
+        }
+    }
+
+    private void OnExportSprite(object? sender, RoutedEventArgs e)
+    {
+        if (SpriteList.SelectedItem is PaintSprite sprite)
+        {
+            // TODO: Implement .pSprite export
+        }
+    }
+
+    private void OnDuplicateSprite(object? sender, RoutedEventArgs e)
+    {
+        if (SpriteList.SelectedItem is not PaintSprite sprite)
+            return;
+
+        // Duplicate the sprite
+        var newSprite = PaintSprite.Duplicate(sprite);
+
+        // Add to project + UI
+        _project.Sprites.Add(newSprite);
+        Sprites.Add(newSprite);
+    }
+
+    private void OnDeleteSprite(object? sender, RoutedEventArgs e)
+    {
+        if (SpriteList.SelectedItem is PaintSprite sprite)
+        {
+            PaintSprite.Delete(sprite);
+            Sprites.Remove(sprite);
+            _project.Sprites.Remove(sprite);
+        }
+    }
+
+    private void OnRenameSprite(object? sender, RoutedEventArgs e)
+    {
+        if (SpriteList.SelectedItem is not PaintSprite sprite)
+            return;
+
+        string parent = Directory.GetParent(sprite.SpriteFolder)!.FullName;
+
+        string safeName = PaintSprite.SafeRename(Translator.Map("NewName"), parent);
+
+        PaintSprite.Rename(sprite, safeName);
+
+        // Refresh UI
+        Sprites.Remove(sprite);
+        Sprites.Add(sprite);
     }
 }

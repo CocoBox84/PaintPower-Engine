@@ -88,7 +88,8 @@
 							Margin="10">
 						<StackPanel Orientation="Horizontal"
 									Spacing="8">
-							<TextBlock Text="Zoom"
+							<TextBlock x:Name="ZoomText"
+									   Text="Zoom"
 									   Foreground="White"
 									   VerticalAlignment="Center"/>
 							<Slider x:Name="ZoomSlider"

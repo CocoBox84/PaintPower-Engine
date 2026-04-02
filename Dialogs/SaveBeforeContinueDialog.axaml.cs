@@ -2,6 +2,8 @@
 using Avalonia.Interactivity;
 using System.Threading.Tasks;
 
+using PaintPower.Accessibility.Translation;
+
 namespace PaintPower.Dialogs;
 
 public partial class SaveBeforeContinueDialog : Window
@@ -9,7 +11,8 @@ public partial class SaveBeforeContinueDialog : Window
     public SaveBeforeContinueDialog()
     {
         InitializeComponent();
-        Title = "Save Before Continuing?";
+        Title = Translator.Map("Save Before Continuing?");
+        Translator.LanguageChanged += TranslateGUI;
     }
 
     public Task<string?> ShowAsync(Window parent)
@@ -35,5 +38,18 @@ public partial class SaveBeforeContinueDialog : Window
     private void OnCancel(object? sender, RoutedEventArgs e)
     {
         Close(null);
+    }
+
+    public void TranslateGUI()
+    {
+        SaveButton.Content = Translator.Map("Save");
+        SaveAsButton.Content = Translator.Map("Save As");
+        DontSaveButton.Content = Translator.Map("Don't Save");
+        CancelButton.Content = Translator.Map("Cancel");
+
+        SaveBeforeContinueText.Text = Translator.Map("Save before continuing?");
+        ChangesLostText.Text = Translator.Map("Your changes will be lost if you don't save.");
+
+        InvalidateVisual();
     }
 }

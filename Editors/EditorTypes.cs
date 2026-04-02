@@ -11,7 +11,7 @@ public class EditorTypes
 {
     public static string[] Paint = { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp" };
 
-    public static string[] Script = { ".pxml", ".psf", ".pss", ".c", ".cs", ".c#", ".h", ".cpp", ".c++", ".hpp", ".lua", ".py",
+    public static string[] Script = { ".xPaint", ".paint", ".Paint", ".pxml", ".pxs", ".psf", ".pss", ".c", ".cs", ".c#", ".h", ".cpp", ".c++", ".hpp", ".lua", ".py",
         ".json", ".xml", ".yaml", ".yml", ".md", ".txt", ".spk", ".sxml", ".xss", ".xs", 
         ".Coco", ".coco", ".script", "CocoScript", ".cocoscript", ".jav", ".java", ".html", ".htm", ".xml", ".xaml", ".axaml", 
         ".css", ".js", ".jsx", ".ts", ".m", ".json", ".jsonc" };

@@ -15,8 +15,11 @@ public class Server
 {
     //*--- Domain security. ---*//
     private static List<Domain> AllowedDomainsList = new List<Domain>();
+    private bool isConnected = false;
     public void AllowDomain(Domain domain) => AllowedDomainsList.Add(domain);
     public bool IsDomainAllowed(Domain domain) => AllowedDomainsList.Contains(domain);
+
+    public void ClearAllowedDomains() => AllowedDomainsList.Clear();
 
     public void RemoveDomain(Domain domain) { AllowedDomainsList.Remove(domain); }
 
@@ -26,14 +29,14 @@ public class Server
         AllowedDomainsList.Clear();
     }
 
-    // Create, register, and add defualt domains.
+    // Create, register, and add default domains.
     public void loadDefaultDomains() {
         
         // Clear old list
         AllowedDomainsList.Clear();
 
         // Create Coco links, Paint links, random links, and more!
-        // Creating a custom server? Make a issue on Github and i'll add it here!
+        // Creating a custom server? Make a issue on GitHub and I'll add it here!
         Domain d1 = new Domain("xpaint.cocoink.ink");
         Domain d2 = new Domain("paint.cocoink.ink");
         Domain d3 = new Domain("127.0.0.1:5500/f/xPaint");
@@ -74,13 +77,26 @@ public class Server
     }
 
     //*--- Networking ---*//
-    public void InitServer()
+    public async Task InitServer()
     {
         loadDefaultDomains();
-        checkConnection();
+        isConnected = await checkConnection();
     }
 
-    public bool checkConnection() { return true; }
+    public async Task<bool> checkConnection() {
+        var domain = CurrentDomain;
+        if (domain == null) throw new ArgumentNullException(nameof(domain));
+
+        if (!IsDomainAllowed(domain)) throw new UnauthorizedAccessException("Domain not allowed");
+
+        try {
+            return await Net.PerformGetRequest(URLifyer.URLify(domain)) == "Ok.";
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
     public async Task<object> GetFromServer()
     {

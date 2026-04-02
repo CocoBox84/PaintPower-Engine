@@ -2,6 +2,8 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
+using PaintPower.Accessibility.Translation;
+
 namespace PaintPower.Dialogs;
 
 public partial class DoSaveWindowDialog : Window
@@ -9,9 +11,9 @@ public partial class DoSaveWindowDialog : Window
     public DoSaveWindowDialog()
     {
         InitializeComponent();
-        Title = "Overwrite your old data?!";
-        PromptText.Text = "Do you want to overwrite your save data?";
-        PromptText2.Text = "(This will save your work in the currently open editor.)";
+        Title = Translator.Map("Overwrite your old data?!");
+        PromptText.Text = Translator.Map("Do you want to overwrite your save data?");
+        PromptText2.Text = Translator.Map("(This will save your work in the currently open editor.)");
     }
 
     public Task<string?> ShowAsync(Window parent)

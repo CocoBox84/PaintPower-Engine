@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using PaintPower.Accessibility.Translation;
 using PaintPower.Editors;
 using PaintPower.Logging;
 using PaintPower.ProjectSystem;
@@ -23,10 +24,13 @@ public partial class SpriteEditorView : UserControl
         // Set explorer root to sprite items folder
         _workspace.SetActiveRoot(sprite.ItemsFolder);
         Explorer.SetRoot(sprite.ItemsFolder);
+
+        Translator.LanguageChanged += () => TranslateGUI();
     }
 
     public void OpenEditor(EditorBase editor, string fullPath)
     {
+        TranslateGUI();
         var relative = MakeSpriteRelative(fullPath);
         editor.SetRelativePath(relative);
         Log.QuickLog(fullPath);
@@ -38,5 +42,10 @@ public partial class SpriteEditorView : UserControl
     {
         // fullPath = items/sprites/<Sprite>/items/<whatever>
         return fullPath.Replace(_sprite.ItemsFolder + Path.DirectorySeparatorChar, "");
+    }
+
+    public void TranslateGUI()
+    {
+        Explorer.TranslateGUI();
     }
 }

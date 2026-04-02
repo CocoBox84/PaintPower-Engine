@@ -7,14 +7,14 @@
 
     <StackPanel Margin="20" Spacing="15">
 
-        <TextBlock Text="Welcome to the PaintPower engine!"
+        <TextBlock x:Name="WelcomeText" Text="Welcome to the PaintPower engine!"
                    FontSize="18"
                    HorizontalAlignment="Center"/>
 
-		<Button Classes="white" Content="Create New Project"
+		<Button x:Name="NewProjectButton" Classes="white" Content="Create New Project"
                 Click="OnNewProject"/>
 
-		<Button Classes="gray" Content="Open Existing Project"
+		<Button x:Name="OpenProjectButton" Classes="gray" Content="Open Existing Project"
                 Click="OnOpenProject"/>
 
     </StackPanel>

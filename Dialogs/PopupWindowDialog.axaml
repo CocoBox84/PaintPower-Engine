@@ -5,7 +5,9 @@
         WindowStartupLocation="CenterOwner">
 
     <StackPanel Margin="10" Spacing="10">
-		<TextBlock x:Name="PromptText"/>
-		<Button Classes="white" Content="Ok" Click="OnOk"/>
+		<TextBlock FontSize="20" x:Name="HeaderText" />
+		<TextBlock FontSize="15" x:Name="PromptText"/>
+		
+		<Button x:Name="OkButton" Classes="white" Content="Ok" Click="OnOk"/>
     </StackPanel>
 </Window>

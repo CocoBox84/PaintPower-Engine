@@ -37,4 +37,10 @@ public class Editor
     public static void SaveEditor() {
         ActiveEditor.Save();
     }
+
+    public void TranslateGUI()
+    {
+        if (ActiveEditor != null)
+            ActiveEditor.TranslateGUI();
+    }
 }

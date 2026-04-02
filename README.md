@@ -17,4 +17,7 @@ Written in C#. I use Visual Studio 2022.
 [Visual Studio](http://visualstudio.microsoft.com/downloads/ "Microsof Visiual stuio")
 In Visual Studio, click on "PaintPower" and it should build and run.
 
+I also us Visual Studio Code with the C# extension.
+[Visual Studio Code](http://code.visualstudio.com/download/ "Microsof Visiual stuio cohed")
+
 Don't forget to visit my website! At: [Coco Website](http://www.cocoink.ink/ "Welcome to the Coco Website!")

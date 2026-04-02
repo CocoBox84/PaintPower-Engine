@@ -4,6 +4,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.TextMate;
+using PaintPower.Accessibility.Translation;
 using PaintPower.Editors.EditorTools.ScriptEditorTools;
 using PaintPower.EditorTools.ScriptEditorTools;
 using PaintPower.ProjectSystem;
@@ -55,6 +56,20 @@ public partial class ScriptEditor : EditorBase
         var ext = Path.GetExtension(relativePath);
         var scope = _registryOptions.GetScopeByExtension(ext);
 
+        // Add custom language support like .pxml, .pxs, .pss, etc.
+        // For now, because we don't have TextMate grammars for those, we'll just use html, css and C# grammar as a placeholder.
+
+        // .pxml -> xml
+        // .pxs -> css
+        // .pss -> csharp
+
+            if (ext == ".pxml")
+                scope = _registryOptions.GetScopeByExtension(".xml");
+            else if (ext == ".pxs")
+                scope = _registryOptions.GetScopeByExtension(".css");
+            else if (ext == ".pss")
+                scope = _registryOptions.GetScopeByExtension(".cs");
+
         // NOW add bracket colorizer
         _bracketColorizer = new RainbowBracketColorizer(editor.Document);
         editor.TextArea.TextView.LineTransformers.Add(_bracketColorizer);
@@ -79,7 +94,7 @@ public partial class ScriptEditor : EditorBase
         // Autosave
         editor.TextChanged += (_, __) =>
         {
-            MainWindow.App.SetProjectStatus("Save Project");
+            MainWindow.App.SetProjectStatus(Translator.Map("Save Project"));
             MainWindow.App.saveNeeded = true;
 
             _bracketColorizer.Update(editor.Document);

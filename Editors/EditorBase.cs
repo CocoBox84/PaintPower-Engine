@@ -26,4 +26,6 @@ public partial class EditorBase : UserControl
     }
 
     public string type = "";
+
+    public virtual void TranslateGUI() { }
 }

@@ -2,6 +2,8 @@
 using Avalonia.Interactivity;
 using System.Threading.Tasks;
 
+using PaintPower.Accessibility.Translation;
+
 namespace PaintPower.Dialogs;
 
 public partial class InputDialog : Window
@@ -11,8 +13,8 @@ public partial class InputDialog : Window
     public InputDialog(string title, string prompt)
     {
         InitializeComponent();
-        Title = title;
-        PromptText.Text = prompt;
+        Title = Translator.Map(title);
+        PromptText.Text = Translator.Map(prompt);
         _tcs = new TaskCompletionSource<string?>();
         this.Closed += (_, __) => _tcs.TrySetResult(null);
     }

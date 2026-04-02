@@ -4,13 +4,18 @@ using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using Avalonia.Markup.Xaml;
 
+using PaintPower.Accessibility.Translation;
+
 namespace PaintPower.Dialogs;
 
 public partial class ProjectLoaderDialog : Window
 {
     private TaskCompletionSource<ProjectLoaderResult?> _tcs;
 
-    public ProjectLoaderDialog() => AvaloniaXamlLoader.Load(this);
+    public ProjectLoaderDialog() {
+        AvaloniaXamlLoader.Load(this);
+        Translator.LanguageChanged += TranslateGUI;
+    }
 
     public Task<ProjectLoaderResult?> ShowAsync(Window parent)
     {
@@ -22,9 +27,9 @@ public partial class ProjectLoaderDialog : Window
     {
         var savePicker = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Create New Project",
+            Title = Translator.Map("Create New Project"),
             DefaultExtension = "xPaint",
-            SuggestedFileName = "NewProject.xPaint",
+            SuggestedFileName = $"{Translator.Map("NewProject")}.xPaint",
             ShowOverwritePrompt = true
         });
 
@@ -43,13 +48,14 @@ public partial class ProjectLoaderDialog : Window
 
     private async void OnOpenProject(object? sender, RoutedEventArgs e)
     {
+        TranslateGUI(); // Ensure translation is up to date before opening file dialog, as it may be used in the title or file type descriptions.
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Open Project",
+            Title = Translator.Map("Open Project"),
             AllowMultiple = false,
             FileTypeFilter = new[]
             {
-                new FilePickerFileType("PaintPower Project")
+                new FilePickerFileType(Translator.Map("PaintPower Project"))
                 {
                     Patterns = new[] { "*.xPaint", "*.xpaint", "*.Paint", "*.paint" }
                 }
@@ -68,6 +74,15 @@ public partial class ProjectLoaderDialog : Window
         _tcs.TrySetResult(r);
         Close();
     } 
+
+    public void TranslateGUI()
+    {
+        WelcomeText.Text = Translator.Map("Welcome to the PaintPower engine!");
+        NewProjectButton.Content = Translator.Map("Create New Project");
+        OpenProjectButton.Content = Translator.Map("Open Existing Project");
+
+        InvalidateVisual();
+    }
 }
 
 public class ProjectLoaderResult

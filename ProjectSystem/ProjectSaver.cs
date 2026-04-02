@@ -28,7 +28,7 @@ class ProjectSaver {
     async public static void PublishToServer(PaintProject project, EditorBase editor, Server server)
     {
         await PaintPower_Engine.App.Save();
-        if (server.checkConnection() && project != null)
+        if (await server.checkConnection() && project != null)
         {
             await server.UploadProject(project);
         }

@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using PaintPower.Accessibility.Translation;
+
 namespace PaintPower.Editors;
 
 public partial class PaintEditor : EditorBase
@@ -105,6 +107,22 @@ public partial class PaintEditor : EditorBase
         HandToolButton.Click += (_, __) => { _tool = ToolMode.Hand; _isPanning = true; ResetCursor(); };
         BucketButton.Click += (_, __) => { _tool = ToolMode.Bucket; _isPanning = false; ResetCursor(); };
     }
+
+    public override void TranslateGUI()
+    {
+        base.TranslateGUI();
+
+        BrushButton.Content = Translator.Map("Brush");
+        EraserButton.Content = Translator.Map("Eraser");
+        HandToolButton.Content = Translator.Map("Hand Tool");
+        BucketButton.Content = Translator.Map("Bucket Fill");
+        SaveButton.Content = Translator.Map("Save");
+        UndoButton.Content = Translator.Map("Undo");
+        RedoButton.Content = Translator.Map("Redo");
+        ClearButton.Content = Translator.Map("Clear");
+        ZoomText.Text = Translator.Map("Zoom");
+    }
+
 
     private void LoadOrCreateImage()
     {

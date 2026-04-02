@@ -7,6 +7,8 @@ using PaintPower.Dialogs;
 using System;
 using System.Threading.Tasks;
 
+using PaintPower.Accessibility.Translation;
+
 namespace PaintPower.FileExplorer;
 
 public partial class ExplorerView : UserControl
@@ -19,6 +21,7 @@ public partial class ExplorerView : UserControl
     public ExplorerView()
     {
         InitializeComponent();
+        Translator.LanguageChanged += () => Refresh();
     }
 
     // Called by MainWindow after project loads
@@ -28,6 +31,7 @@ public partial class ExplorerView : UserControl
         _currentDir = workspace.ActiveRoot;
 
         FileList.ItemsSource = Items;
+
         Refresh();
     }
 
@@ -40,6 +44,8 @@ public partial class ExplorerView : UserControl
 
     private void Refresh()
     {
+        TranslateGUI();
+
         Items.Clear();
 
         if (_workspace == null || !Directory.Exists(_currentDir))
@@ -183,5 +189,14 @@ public partial class ExplorerView : UserControl
 
         // Open file in editor
         PaintPower_Engine.App.OpenFile(item.FullPath);
+    }
+
+    public void TranslateGUI()
+    {
+        // Toolbar buttons
+        NewFileButton.Content = Translator.Map("New");
+        NewFolderButton.Content = Translator.Map("New Folder");
+        GoRootButton.Content = Translator.Map("Go to Root");
+        GoUpButton.Content = Translator.Map("Go Up");
     }
 }
