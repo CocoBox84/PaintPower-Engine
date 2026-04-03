@@ -1,6 +1,6 @@
 # PaintPower
 ## Open source Engine for the 'Coco xPaint Project'.
-### Current version: Pre-Alpha 1.0.0.2 build 6053282026
+### Current version: Pre-Alpha 1.0.1.0 build 2158422026
 
 ## What is it?
 

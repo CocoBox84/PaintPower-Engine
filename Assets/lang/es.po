@@ -219,3 +219,12 @@ msgstr "Nuevo Archivo"
 
 msgid "New Folder"
 msgstr "Nueva Carpeta"
+
+msgid "Play"
+msgstr "Reproducir"
+
+msgid "Stop"
+msgstr "Detener"
+
+msgid "Build and Run"
+msgstr "Compilar y Ejecutar"

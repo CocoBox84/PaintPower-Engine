@@ -223,7 +223,7 @@ public class PaintPower_Engine
 
         while (_isSavingAnimationRunning)
         {
-            SetProjectStatus(frames[index]);
+            SetProjectStatus(Translator.Map(frames[index]));
             index = (index + 1) % frames.Length;
             await Task.Delay(300); // smooth animation
         }

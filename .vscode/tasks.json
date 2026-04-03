@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "dotnet: build (Debug)",
+			"type": "dotnet",
+			"task": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"command": "build",
+			"arguments": ["--configuration", "Debug"]
+		},
+		{
+			"label": "dotnet: build (Release)",
+			"type": "dotnet",
+			"task": "build",
+			"group": "build",
+			"problemMatcher": [],
+			"command": "build",
+			"arguments": ["--configuration", "Release"]
+		}
+	]
+}
