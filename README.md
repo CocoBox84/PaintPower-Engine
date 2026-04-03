@@ -13,11 +13,11 @@ a Paint editor, a Script/text editor, a Animation editor and a Video editor. It 
 Think it's a virus? Build it yourself then, if you trust me, you can download the pre-built versions here:
 [PaintPower Downloads](http://github.com/CocoBox84/PaintPower-Engine/releases/ "PaintPower Downloads")
 
-Written in C#. I use Visual Studio 2022.
+Written in C#. I used to use Visual Studio 2022.
 [Visual Studio](http://visualstudio.microsoft.com/downloads/ "Microsof Visiual stuio")
 In Visual Studio, click on "PaintPower" and it should build and run.
 
-I also us Visual Studio Code with the C# extension.
+ Now I use Visual Studio Code with the C# Dev Extension.
 [Visual Studio Code](http://code.visualstudio.com/download/ "Microsof Visiual stuio cohed")
 
 Don't forget to visit my website! At: [Coco Website](http://www.cocoink.ink/ "Welcome to the Coco Website!")
