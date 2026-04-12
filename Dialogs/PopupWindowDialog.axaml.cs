@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using System.Threading.Tasks;
 
 using PaintPower.Accessibility.Translation;
 

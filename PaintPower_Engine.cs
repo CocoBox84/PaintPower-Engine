@@ -43,6 +43,7 @@ public class PaintPower_Engine
 
     public bool saveNeeded = false;
 
+    #pragma warning disable
     public static PaintPower_Engine App { get; private set; }
     public static MainWindow window;
 
@@ -89,6 +90,7 @@ public class PaintPower_Engine
     {
         if (_project != null && saveNeeded)
         {
+            #pragma warning disable
             Save();
         }
     }
@@ -200,6 +202,7 @@ public class PaintPower_Engine
 
     public void CloseEditor()
     {
+        #pragma warning disable
         window.CenterHost.Content = null;
         _editor = null;
     }

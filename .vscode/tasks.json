@@ -11,7 +11,10 @@
 			},
 			"problemMatcher": [],
 			"command": "build",
-			"arguments": ["--configuration", "Debug"]
+			"arguments": [
+				"--configuration",
+				"Debug"
+			]
 		},
 		{
 			"label": "dotnet: build (Release)",
@@ -20,7 +23,18 @@
 			"group": "build",
 			"problemMatcher": [],
 			"command": "build",
-			"arguments": ["--configuration", "Release"]
+			"arguments": [
+				"--configuration",
+				"Release"
+			]
+		},
+		{
+			"type": "dotnet",
+			"task": "build c:\\Users\\ninoe\\Documents\\PaintPower\\PaintPower\\PaintPower.csproj",
+			"file": "c:\\Users\\ninoe\\Documents\\PaintPower\\PaintPower\\PaintPower.csproj",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "dotnet: build c:\\Users\\ninoe\\Documents\\PaintPower\\PaintPower\\PaintPower.csproj"
 		}
 	]
 }
