@@ -43,7 +43,7 @@ public class PaintPower_Engine
 
     public bool saveNeeded = false;
 
-    #pragma warning disable
+#pragma warning disable
     public static PaintPower_Engine App { get; private set; }
     public static MainWindow window;
 
@@ -61,7 +61,7 @@ public class PaintPower_Engine
 
     public void setupTranslation()
     {
-                // Set-up translation
+        // Set-up translation
         Translator.load(null);
 
         var langs = Translator.GetAvailableLanguages();
@@ -90,7 +90,7 @@ public class PaintPower_Engine
     {
         if (_project != null && saveNeeded)
         {
-            #pragma warning disable
+#pragma warning disable
             Save();
         }
     }
@@ -113,24 +113,32 @@ public class PaintPower_Engine
         SetProjectStatus($"{Translator.Translate("Editing Sprite:")} {sprite.Name}");
     }
 
-    public void OpenProjectFile()
+    public void OpenProjectFile(string filePath = "")
     {
-        var openPicker = window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        if (filePath == "")
         {
-            Title = Translator.Map("Open PaintPower Project"),
-            AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType(Translator.Map("PaintPower Project")) { Patterns = new[] { "*.xPaint" } } }
-        }).ContinueWith(async t =>
-        {
-            var result = await t;
-            if (result.Count > 0)
+            var openPicker = window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                string path = result[0].Path.LocalPath;
-                _project.Load(path);
-                _project.ProjectPath = path;
-                window.Title = $"{Translator.Map("PaintPower")} - {_project.Metadata.name}";
-            }
-        });
+                Title = Translator.Map("Open PaintPower Project"),
+                AllowMultiple = false,
+                FileTypeFilter = new[] { new FilePickerFileType(Translator.Map("PaintPower Project")) { Patterns = new[] { "*.xPaint" } } }
+            }).ContinueWith(async t =>
+            {
+                var result = await t;
+                if (result.Count > 0)
+                {
+                    string path = result[0].Path.LocalPath;
+                    _project.Load(path);
+                    _project.ProjectPath = path;
+                }
+            });
+        } else
+        {
+            _project.Load(filePath);
+            _project.ProjectPath = filePath;
+        }
+
+        window.Title = $"{Translator.Map("PaintPower")} - {_project.Metadata.name}";
     }
 
     public async void newProject()
@@ -202,7 +210,7 @@ public class PaintPower_Engine
 
     public void CloseEditor()
     {
-        #pragma warning disable
+#pragma warning disable
         window.CenterHost.Content = null;
         _editor = null;
     }

@@ -32,4 +32,9 @@ public class Domain
         Port = nPort;
         domain = nDomain;
     }
+
+    public override string ToString()
+    {
+        return $"Domain: {Name} ({Protocol}://{Host}:{Port})";
+    }
 }

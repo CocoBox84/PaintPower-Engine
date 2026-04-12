@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
 using PaintPower.ProjectSystem;
+using PaintPower.Logging;
 
 namespace PaintPower.Networking;
 
@@ -15,7 +16,7 @@ public class Server
 {
     //*--- Domain security. ---*//
     private static List<Domain> AllowedDomainsList = new List<Domain>();
-    private bool isConnected = false;
+    private bool isConnected = false; 
     public void AllowDomain(Domain domain) => AllowedDomainsList.Add(domain);
     public bool IsDomainAllowed(Domain domain) => AllowedDomainsList.Contains(domain);
 
@@ -98,7 +99,7 @@ public class Server
         }
     }
 
-    public async Task<object> GetFromServer()
+    public async Task<object?> GetFromServer()
     {
         var domain = CurrentDomain;
         if (domain == null) throw new ArgumentNullException(nameof(domain));
@@ -106,15 +107,30 @@ public class Server
         return await Net.PerformGetRequest(URLifyer.URLify(domain));
     }
 
+    /* Download a project made by the user */
     public async Task DownloadProject(string savePath)
     {
         string url = URLifyer.URLify(CurrentDomain);
         await Net.DownloadFileAsync(url, savePath);
     }
 
+    /* Save the project and load it into the editor. */
+    public async Task DownloadProjectAndLoad(string savePath)
+    {
+        try {
+            await DownloadProject(savePath);
+        } catch(Exception e)
+        {
+            Log.QuickLog(e.Message);
+        }
+
+        PaintPower_Engine.App.OpenProjectFile(savePath);
+    }
+
     public async Task UploadProject(PaintProject project)
     {
-        MainWindow.App.RunSavingAnimation(); // new helper
+        #pragma warning disable
+        PaintPower_Engine.App.RunSavingAnimation(); // new helper
 
         try
         {

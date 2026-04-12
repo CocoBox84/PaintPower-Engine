@@ -1,4 +1,8 @@
-﻿using System;
+﻿/*
+    Actual networking
+*/
+
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -12,7 +16,7 @@ class Net
     private static readonly HttpClient client = new HttpClient();
 
     // GET request method
-    public static async Task<string> PerformGetRequest(string url)
+    public static async Task<string?> PerformGetRequest(string url)
     {
         try
         {
