@@ -150,7 +150,7 @@ public class Server
         try
         {
             await Net.UploadFileAsync(
-                 $"{URLifyer.URLify(CurrentDomain)}api/upload/projects/1/",
+                 makeUrl(Routes.normalOverwriteUpload(PaintPower_Engine.App._project.Metadata.serverId)),
                  project.ProjectPath,
                  project.Metadata.name // send project title
              );
@@ -191,8 +191,10 @@ public class Server
         string? response = (string)await Net.PerformPostRequest(url, payload);
         if (response == null) return null;
 
+        try {
         var json = JsonSerializer.Deserialize<Dictionary<string, string>>(response);
         return json?["id"];
+        } catch { return null; }
     }
 
     public string Username { get; set; }

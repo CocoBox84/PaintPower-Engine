@@ -24,6 +24,11 @@ public class Routes
         return "api/projects/create";
     }
 
+    public static string normalOverwriteUpload(string id)
+    {
+        return $"api/upload/projects/{id}/";
+    }
+
     // Upload project routes
     public static string uploadNew() {
         return "api/projects/new/upload/paintfile/";
