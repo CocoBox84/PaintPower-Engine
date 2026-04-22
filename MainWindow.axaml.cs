@@ -126,6 +126,7 @@ public partial class MainWindow : Window
 
     private void OnMakeConnection(object? sender, RoutedEventArgs e)
     {
+        #pragma warning disable
         // Enable connection to the server
         App.server.checkConnection();
     }
