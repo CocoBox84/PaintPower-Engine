@@ -1,3 +1,51 @@
+Let's do if/else.
+
+Also I was playing around with ks to see if blocks work:
+
+        string script = @"
+                        [#define var ""y"" ""y""];
+                        [#set ""y""](""Hi!"");
+                        [#block]
+                            [#define var ""x"" ""x""]
+                            [#set ""x""](""Hello, World!"");
+                            [#call PopularIds.functions.print]([#get ""x""]);
+                            [#call PopularIds.functions.print]([#get ""y""]);
+                        [/#block]
+                        [#set ""y""](""Ok."");
+                        [#call PopularIds.functions.print]([#get ""y""]);
+                        [#set ""x""](""Should not print."");
+                        [#call PopularIds.functions.print]([#get ""x""]);
+                        ";
+
+And it throws as it should.
+
+And this:
+
+        string script = @"
+                        [#define var ""y"" ""y""];
+                        [#set ""y""](""Hi!"");
+                        [#block]
+                            [#define var ""x"" ""x""]
+                            [#set ""x""](""Hello, World!"");
+                            [#call PopularIds.functions.print]([#get ""x""]);
+                            [#call PopularIds.functions.print]([#get ""y""]);
+                        [/#block]
+                        [#set ""y""](""Ok."");
+                        [#call PopularIds.functions.print]([#get ""y""]);
+                        ";
+
+Does this:
+
+Running KiteScript program:
+Hello, World!
+Hi!
+Ok.
+Done.
+
+So, yay it works!
+
+Now anyway, let's move on to if/else statments, I'm going to paste the documentation for KiteScript again, just ignore the other parts and focus on the if/else statements part.
+
 Let's clean it up a bit. Here is the syntax for PreBytecode:
 
 [#{instruction type} {params...} ]

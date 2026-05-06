@@ -1,0 +1,54 @@
+[#define var "x" "x"]
+[#define var "y" "y"]
+[#define var "status" "status"]
+
+[#set "x"](15);
+[#set "y"]("Outer");
+[#set "status"]("unknown");
+
+[#call PopularIds.functions.print]("Starting system check...");
+
+[#if x < 10]
+[#block]
+    [#call PopularIds.functions.print]("x is less than 10");
+    [#set "status"]("low");
+[/#block]
+
+[#else if x == 10]
+[#block]
+    [#call PopularIds.functions.print]("x is exactly 10");
+    [#set "status"]("equal");
+[/#block]
+
+[#else if x > 10]
+[#block]
+    [#call PopularIds.functions.print]("x is greater than 10");
+    [#set "status"]("high");
+[/#block]
+
+[#else]
+[#block]
+    [#call PopularIds.functions.print]("Unexpected value for x");
+[/#block]
+
+[#call PopularIds.functions.print]("Status after x-check:");
+[#call PopularIds.functions.print]([#get "status"]);
+
+[#if y == "Outer"]
+    [#call PopularIds.functions.print]("y is Outer");
+
+[#block]
+    [#define var "y" "y"]
+    [#set "y"]("Inner");
+
+    [#call PopularIds.functions.print]("Inside nested block:");
+    [#call PopularIds.functions.print]([#get "y"]);
+[/#block]
+
+[#call PopularIds.functions.print]("Outside nested block:");
+[#call PopularIds.functions.print]([#get "y"]);
+
+[#if status != "unknown"]
+    [#call PopularIds.functions.print]("Status is valid");
+
+[#call PopularIds.functions.print]("System check complete.");

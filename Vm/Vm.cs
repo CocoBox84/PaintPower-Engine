@@ -31,7 +31,7 @@ public class Vm
 
     public int currentThread = 0;
 
-    // If 3D processing is enabled, use the system's processing power to run the VM.
+    // If 3D processing is enabled, use the system's processing power to run the VM. Use the GPU for 3D Acceleration.
     public bool usingSystemProcessing = false;
 
     public Dictionary<string, VmThread> Threads { get; } = new();
@@ -39,7 +39,15 @@ public class Vm
 #pragma warning disable
     public Vm()
     {
-        KiteScriptTest.Run();
+        try
+        {
+            // KiteScriptTest.Run();
+        }
+        catch (Exception e)
+        {
+            Log.QuickLog(e);
+        }
+        ;
         vm = this;
     }
 

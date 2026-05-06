@@ -27,10 +27,17 @@ public static class BuiltinRegistry
     {
         if (args.Count > 0)
         {
+            // Literal print: print("Hello")
             int c = set.AddConstant(args[0]);
             set.Emit(OpCode.LoadConst, c);
+        }
+        else
+        {
+            // Stack print: print([#get "x"])
+            // Do nothing — value is already on the stack
         }
 
         set.Emit(OpCode.Print);
     }
+
 }

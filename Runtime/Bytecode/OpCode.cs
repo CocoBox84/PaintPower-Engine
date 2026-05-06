@@ -12,5 +12,12 @@ public enum OpCode : byte
     JumpIfFalse,    // Conditional jump
     SendMessage,    // VM message passing
     ReceiveMessage,  // Pull from message queue
-    Print            // Print to console
+    Print,            // Print to console
+    CompareEqual,
+    CompareNotEqual,
+    CompareLess,
+    CompareGreater,
+    CompareLessEqual,
+    CompareGreaterEqual,
+
 }

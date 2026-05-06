@@ -20,6 +20,62 @@ public class Interpreter
         _locals = new object[_code.LocalCount];
     }
 
+    private static bool SafeToBool(object? value)
+    {
+        if (value == null)
+            return false;
+
+        try
+        {
+            // Numbers: 0 = false, nonzero = true
+            if (value is int i)
+                return i != 0;
+            if (value is double d)
+                return d != 0.0;
+
+            // Strings: empty or "0" = false
+            if (value is string s)
+            {
+                if (string.IsNullOrWhiteSpace(s))
+                    return false;
+                if (s == "0")
+                    return false;
+                if (bool.TryParse(s, out bool b))
+                    return b;
+                return true; // any non-empty, non-"0" string is true
+            }
+
+            // Fallback to Convert
+            return Convert.ToBoolean(value);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static double SafeToDouble(object? value)
+    {
+        if (value == null)
+            return 0;
+
+        try
+        {
+            if (value is int i)
+                return i;
+            if (value is double d)
+                return d;
+            if (value is string s && double.TryParse(s, out double parsed))
+                return parsed;
+
+            return Convert.ToDouble(value);
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
     public void Step()
     {
         if (IsFinished)
@@ -52,6 +108,69 @@ public class Interpreter
                 {
                     var value = _stack.Pop();
                     Log.QuickLog(value);
+                    break;
+                }
+
+            case OpCode.JumpIfFalse:
+                {
+                    var value = _stack.Pop();
+                    bool cond = SafeToBool(value);
+                    if (!cond)
+                        _ip = instr.Operand;
+                    else
+                        _ip++;
+                    return;
+                }
+
+            case OpCode.Jump:
+                _ip = instr.Operand;
+                return;
+
+            case OpCode.CompareEqual:
+                {
+                    var b = _stack.Pop();
+                    var a = _stack.Pop();
+                    _stack.Push(Equals(a, b));
+                    break;
+                }
+
+            case OpCode.CompareNotEqual:
+                {
+                    var b = _stack.Pop();
+                    var a = _stack.Pop();
+                    _stack.Push(!Equals(a, b));
+                    break;
+                }
+
+            case OpCode.CompareLess:
+                {
+                    var b = SafeToDouble(_stack.Pop());
+                    var a = SafeToDouble(_stack.Pop());
+                    _stack.Push(a < b);
+                    break;
+                }
+
+            case OpCode.CompareGreater:
+                {
+                    var b = SafeToDouble(_stack.Pop());
+                    var a = SafeToDouble(_stack.Pop());
+                    _stack.Push(a > b);
+                    break;
+                }
+
+            case OpCode.CompareLessEqual:
+                {
+                    var b = SafeToDouble(_stack.Pop());
+                    var a = SafeToDouble(_stack.Pop());
+                    _stack.Push(a <= b);
+                    break;
+                }
+
+            case OpCode.CompareGreaterEqual:
+                {
+                    var b = SafeToDouble(_stack.Pop());
+                    var a = SafeToDouble(_stack.Pop());
+                    _stack.Push(a >= b);
                     break;
                 }
 

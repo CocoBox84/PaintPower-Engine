@@ -39,4 +39,18 @@ public class InstructionSet
         Emit(OpCode.Print);
     }
 
+    public int EmitWithPlaceholder(OpCode op)
+    {
+        // Emit instruction with operand = 0 for now
+        Emit(op, 0);
+        return _instructions.Count - 1;
+    }
+
+    public void PatchJump(int instrIndex)
+    {
+        // Patch operand to point to the next instruction
+        _instructions[instrIndex] = new Instruction(_instructions[instrIndex].OpCode, _instructions.Count);
+    }
+
+
 }
