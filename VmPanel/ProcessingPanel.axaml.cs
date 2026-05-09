@@ -1,9 +1,11 @@
 using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
+using System.Threading.Tasks;
 
 using PaintPower.Logging;
 using PaintPower.Accessibility.Translation;
-using Avalonia.Markup.Xaml;
-using System.Threading.Tasks;
+using PaintPower.Tools.Math.Formulas;
+
 
 namespace PaintPower.VMPanel;
 
@@ -17,9 +19,14 @@ public partial class ProcessingPanel : UserControl
 
     private async void RunTest()
     {
-        for (int i = 0; i <= 100; i++)
+        int total = (!false) ? 398484 : 712;
+        //SetText("Loading Project...", "{processed} of {total} assets loaded");
+        SetText("Compiling Scripts...", "Compiled {processed} of {total} total scripts");
+        for (int processed = (false) ? 29449 : 0; processed <= total; processed++)
         {
-            Loader.SetPercent(i);
+            Loader.SetPercent(Percent.calc(processed, total));
+            //SetSubheaderText($"{processed} of {total} assets loaded");
+            SetSubheaderText($"Compiled {processed} of {total} total scripts");
             await Task.Delay(100);
         }
     }

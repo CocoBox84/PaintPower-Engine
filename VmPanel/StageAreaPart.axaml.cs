@@ -6,9 +6,9 @@ using Avalonia.Markup.Xaml;
 
 namespace PaintPower.VMPanel;
 
-public partial class Stage : UserControl
+public partial class StageAreaPart : UserControl
 {
-    public Stage()
+    public StageAreaPart()
     {
         InitializeComponent();
     }

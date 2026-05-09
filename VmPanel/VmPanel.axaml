@@ -7,10 +7,7 @@
 		<Border Padding="10">
 			<StackPanel Background="White">
 				<TextBlock x:Name="VMPanelText" Text="VM Panel" FontSize="20" Foreground="Black" Margin="0 0 0 10" />
-				<Grid MaxWidth="480" MaxHeight="450">
-					<vm:Stage />
-					<vm:ProcessingPanel x:Name="LoadingPart"></vm:ProcessingPanel>
-				</Grid>
+				<vm:StageAreaPart />
 				<StackPanel Orientation="Horizontal">
 					<Button x:Name="PlayButton" Classes="gray" Content="Play" Margin="0 5" />
 					<Button x:Name="StopButton" Classes="gray" Content="Stop" Margin="0 5" />
