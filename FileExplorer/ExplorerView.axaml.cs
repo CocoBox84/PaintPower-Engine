@@ -112,7 +112,8 @@ public partial class ExplorerView : UserControl
         if (_workspace == null)
             return;
 
-        var dialog = new InputDialog("New File", "Enter file name:");
+        // var dialog = new InputDialog("New File", "Enter file name:");
+        var dialog = new NewFileDialog();
         var window = this.VisualRoot as Window;
         var name = await dialog.ShowAsync(window);
 

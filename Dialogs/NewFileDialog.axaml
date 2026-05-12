@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PaintPower.Dialogs.NewFileDialog"
+        Width="350"
+        Height="480"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+        <Border Background="#b1b98c">
+            <StackPanel Spacing="12">
+
+            <TextBlock Text="Select a file type or enter your own:"
+                       Foreground="White"
+                       FontSize="16"/>
+
+            <ListBox x:Name="FileTemplateList"
+                     Background="#333"
+                     Foreground="White"
+                     Height="360"/>
+
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="10">
+
+                <Button x:Name="CancelButton"
+                        Content="Cancel"
+                        Width="80"/>
+
+                <Button x:Name="SelectButton"
+                        Content="Select"
+                        Width="80"/>
+            </StackPanel>
+
+        </StackPanel>
+        </Border>
+</Window>

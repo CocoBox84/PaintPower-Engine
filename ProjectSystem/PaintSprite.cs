@@ -46,8 +46,15 @@ public class PaintSprite
         sprite.Name = newName;
     }
 
-    public static string SafeRename(string baseName, string parentFolder)
+    public static string? SafeRename(string baseName, string parentFolder)
     {
+        // Clean filename to prevent errors, instead of replacing with underscores, we can just remove invalid chars
+        var invalidChars = Path.GetInvalidFileNameChars();
+        baseName = string.Concat(baseName.Where(c => !invalidChars.Contains(c)));
+
+        if (string.IsNullOrWhiteSpace(baseName))
+            return null;
+
         // If no conflict, return as-is
         string target = Path.Combine(parentFolder, baseName);
         if (!Directory.Exists(target))

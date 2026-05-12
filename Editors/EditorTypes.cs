@@ -11,13 +11,18 @@ public class EditorTypes
 {
     public static string[] Paint = { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp" };
 
-    public static string[] Script = { ".xPaint", ".paint", ".Paint", ".pxml", ".pxs", ".psf", ".pss", ".c", ".cs", ".c#", ".h", ".cpp", ".c++", ".hpp", ".lua", ".py",
+    public static string[] Script = { ".paint", ".Paint", ".pxml", ".pxs", ".psf", ".pss", ".c", ".cs", ".c#", ".h", ".cpp", ".c++", ".hpp", ".lua", ".py",
         ".json", ".xml", ".yaml", ".yml", ".md", ".txt", ".spk", ".sxml", ".xss", ".xs", 
-        ".Coco", ".coco", ".script", "CocoScript", ".cocoscript", ".jav", ".java", ".html", ".htm", ".xml", ".xaml", ".axaml", 
-        ".css", ".js", ".jsx", ".ts", ".m", ".json", ".jsonc", ".wxc", ".asm", ".s" };
+        ".Coco", ".coco", ".script", ".CocoScript", ".cocoscript", ".jav", ".java", ".html", ".htm", ".xml", ".xaml", ".axaml", 
+        ".css", ".js", ".jsx", ".ts", ".m", ".json", ".jsonc", ".wxc", ".asm", ".s", ".coffee", ".coffeescript", ".sasm" };
 
     public static string[] Animation = { ".wxa" };
     public static string[] Video = { ".mp4", ".mov", ".flv", ".wxv" };
+
+    // These are files that can only be opened in a special viewer, like binary files, project files, etc. They can't be edited in the traditional sense, but they can be viewed in a special viewer.
+    public static string[] SpecialViewerFiles = { ".wasm", ".bin", ".rar", ".dat", ".project", ".pproj", ".pprj", ".pprojx", ".pprjx", ".class", ".jar", ".swf", ".zip" };
+
+    public static string[] All = Paint.Concat(Script).Concat(Animation).Concat(Video).ToArray();
 
     // Find editor from list of supported file extensions.
     public static string FindEditorFromExt(string ext)

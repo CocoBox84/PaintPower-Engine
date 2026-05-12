@@ -5,6 +5,8 @@ using PaintPower.ProjectSystem;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using PaintPower.Dialogs;
+using System.Threading.Tasks;
 
 namespace PaintPower.SpriteEditor;
 
@@ -116,26 +118,56 @@ public partial class SpriteManagerView : UserControl
         Sprites.Add(newSprite);
     }
 
-    private void OnDeleteSprite(object? sender, RoutedEventArgs e)
+    private async void OnDeleteSprite(object? sender, RoutedEventArgs e)
     {
         if (SpriteList.SelectedItem is PaintSprite sprite)
         {
-            PaintSprite.Delete(sprite);
-            Sprites.Remove(sprite);
-            _project.Sprites.Remove(sprite);
+            var dialog = new DeletionConfirmationDialog();
+            var window = this.VisualRoot as Window;
+            var doDelete = await dialog.ShowAsync(window);
+            if (doDelete == "delete")
+            {
+                PaintSprite.Delete(sprite);
+                Sprites.Remove(sprite);
+                _project.Sprites.Remove(sprite);
+            }
         }
     }
 
-    private void OnRenameSprite(object? sender, RoutedEventArgs e)
+    private async void OnRenameSprite(object? sender, RoutedEventArgs e)
     {
         if (SpriteList.SelectedItem is not PaintSprite sprite)
             return;
 
-        string parent = Directory.GetParent(sprite.SpriteFolder)!.FullName;
+        bool isValid = false;
 
-        string safeName = PaintSprite.SafeRename(Translator.Map("NewName"), parent);
+        do
+        {
 
-        PaintSprite.Rename(sprite, safeName);
+            var dialog = new InputDialog("Rename sprite", $"Enter new name for \"{sprite.Name}\":");
+            var window = this.VisualRoot as Window;
+            var name = await dialog.ShowAsync(window);
+
+            if (string.IsNullOrWhiteSpace(name)) {
+                isValid = true; // Cancelled, keep old name
+                continue;
+            }
+
+            string parent = Directory.GetParent(sprite.SpriteFolder)!.FullName;
+
+            string? safeName = PaintSprite.SafeRename(name, parent);
+
+            if (safeName == null)
+            {
+                var errorDialog = new PopupWindowDialog(translate("Error"), translate("Invalid name"), "Please enter a different name.");
+                await errorDialog.ShowAsync(window);
+                continue;
+            }
+
+            isValid = true;
+
+            PaintSprite.Rename(sprite, safeName);
+        } while (isValid == false);
 
         // Refresh UI
         Sprites.Remove(sprite);
