@@ -39,4 +39,6 @@ public class ProjectLoader
         // Load sprites
         project.LoadSprites();
     }
+
+    public void LoadProjectFromSystem() {}
 }

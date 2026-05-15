@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -12,12 +14,25 @@ public partial class App : Application
     }
 
     public override void OnFrameworkInitializationCompleted()
+{
+    if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            desktop.MainWindow = new MainWindow();
-        }
+        desktop.MainWindow = new MainWindow();
 
-        base.OnFrameworkInitializationCompleted();
+        // NEW: handle startup file
+        if (desktop.Args is { Length: > 0 })
+        {
+            string file = desktop.Args[0];
+
+            if (File.Exists(file) && file.EndsWith(".xPaint", StringComparison.OrdinalIgnoreCase))
+            {
+                // Pass file to MainWindow
+                ((MainWindow)desktop.MainWindow).StartupProjectPath = file;
+            }
+        }
     }
+
+    base.OnFrameworkInitializationCompleted();
+}
+
 }

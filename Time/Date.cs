@@ -34,6 +34,12 @@ public class Date
 
     public string getBuildTimestamp()
     {
-        return $"{Hour}{Minute}{Month}{Day}{Year}";
+
+        #if BUILD_TIME
+            return BUILD_TIME.ToString();
+        #else
+            return "Unknown";
+        #endif
+
     }
 }

@@ -29,6 +29,11 @@
     <PackageReference Include="NAudio" Version="2.3.0" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <BuildTimestamp>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</BuildTimestamp>
+    <DefineConstants>$(DefineConstants);BUILD_TIME=$(BuildTimestamp)</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="AvaloniaEdit">
       <HintPath>..\AvaloniaEdit\net6.0\AvaloniaEdit.dll</HintPath>

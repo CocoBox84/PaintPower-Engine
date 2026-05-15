@@ -11,7 +11,9 @@ public partial class MainWindow : Window
 
     public static MainWindow window;
 
-    #pragma warning enable
+    public string? StartupProjectPath { get; set; }
+
+#pragma warning enable
 
     public MainWindow()
     {
@@ -26,9 +28,16 @@ public partial class MainWindow : Window
     protected override async void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
+
         App.attachWindow(this);
-        
         App.attachEditorPart(editorPart.attachPaintPower(App));
         App.Start();
+
+        // Load project if opened via double-click
+        if (!string.IsNullOrWhiteSpace(StartupProjectPath))
+        {
+            PaintPower_Engine.App.OpenProjectFile(StartupProjectPath);
+        }
     }
+
 }

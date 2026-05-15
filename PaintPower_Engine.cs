@@ -175,6 +175,8 @@ public class PaintPower_Engine
             filePath = result[0].Path.LocalPath;
         }
 
+        Translator.load(null); // reset translation to default (in case project has different language)
+
         // Reset current project/editor
         CloseEditor();
 
@@ -195,6 +197,8 @@ public class PaintPower_Engine
 
     public async void newProject()
     {
+        Translator.load(null); // reset translation to default (in case current project has different language)
+
         if (saveNeeded)
         {
             var dialog = new SaveBeforeContinueDialog();
