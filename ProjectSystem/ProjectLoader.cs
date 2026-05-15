@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using PaintPower.Logging;
 
 namespace PaintPower.ProjectSystem;
 
@@ -16,8 +17,13 @@ public class ProjectLoader
         // Path to your embedded default project
         string defaultZip = "Assets/Untitled.xPaint";
 
+        // Instead of throwing an error, create an empty project if the default zip is missing
         if (!File.Exists(defaultZip))
-            throw new FileNotFoundException("Default project not found", defaultZip);
+        {
+            Log.QuickLog($"Default project zip not found at {defaultZip}. Creating an empty project.");
+            project.Metadata = new ProjectMetadata { name = "Untitled Project" };
+            return;
+        }
 
         // Extract into the project's workspace
         ZipFile.ExtractToDirectory(defaultZip, project.Workspace.Root, overwriteFiles: true);

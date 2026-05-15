@@ -107,17 +107,20 @@ public class Server
         {
             bool c = await Net.PerformGetRequest(makeUrl(Routes.checkActiveServer())) == "Ok.";
             PaintPower_Engine.App.SetNetworkStatus(c ? "Connected" : "Not connected");
+            isConnected = c;
             return c;
         }
         catch
         {
             PaintPower_Engine.App.SetNetworkStatus("Not connected");
+            isConnected = false;
             return false;
         }
     }
 
     public async Task<object?> GetFromServer(string url)
     {
+        if (!isConnected) return null;
         var domain = CurrentDomain;
         if (domain == null) throw new ArgumentNullException(nameof(domain));
         if (!IsDomainAllowed(domain)) throw new UnauthorizedAccessException("Domain not allowed");
@@ -127,6 +130,7 @@ public class Server
     /* Download a project made by the user */
     public async Task DownloadProject(string savePath, int id)
     {
+        if (!isConnected) return;
         string url = makeUrl($"{id}");
         await Net.DownloadFileAsync(url, savePath);
     }
@@ -134,6 +138,7 @@ public class Server
     /* Save the project and load it into the editor. */
     public async Task DownloadProjectAndLoad(string savePath, int id)
     {
+        if (!isConnected) return;
         try
         {
             await DownloadProject(savePath, id);
@@ -149,6 +154,8 @@ public class Server
 
     public async Task UploadProject(PaintProject project)
     {
+        if (!isConnected) return;
+
 #pragma warning disable
         PaintPower_Engine.App.RunSavingAnimation();
 
@@ -169,6 +176,8 @@ public class Server
     // If the user is signed in, then get a list of their projects from the server.
     public async Task<List<ProjectInfo>> ListUserProjects()
     {
+        if (!isConnected) return new List<ProjectInfo>();
+
         string url = makeUrl(Routes.userProjectsRoute());
         string? response = await Net.PerformGetRequest(url);
 
@@ -190,6 +199,11 @@ public class Server
 
     public async Task<string?> CreateNewServerProject(string title)
     {
+        if (!isConnected) return null;
+
+        if (title.Length > 100) title = title.Substring(0, 100);
+        if (string.IsNullOrWhiteSpace(title)) title = "Untitled Project";
+        if (!await IsLoggedIn()) return null;
         string url = makeUrl(Routes.createNew());
         var payload = new { title = title };
 
@@ -206,6 +220,7 @@ public class Server
 
     public async Task<bool> Login(string username, string password)
     {
+        if (!isConnected) return false;
         if (await IsLoggedIn()) await Logout();
         await Net.Login(username, password);
         if (await IsLoggedIn()) Username = username;
@@ -220,6 +235,7 @@ public class Server
 
     public async Task<bool> IsLoggedIn()
     {
+        if (isConnected == false) return false;
         var response = await Net.PerformGetRequest(makeUrl("api/whoami"));
         return response != null && !response.Contains("Not logged in");
     }

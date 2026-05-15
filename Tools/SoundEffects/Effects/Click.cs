@@ -7,5 +7,5 @@ namespace PaintPower.Tools.SoundEffects.Effects;
 
 public class Click : SoundEffect
 {
-    public Click() : base("Click") {}
+    public Click() : base("Click", "Click2") {}
 }
